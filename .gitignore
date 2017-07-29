@@ -5,8 +5,9 @@
 logs/
 
 #data
-data_025
-data_small
+data/
+data_025/
+data_small/
 
 #Byte-compiled / optimized / DLL files
 __pycache__/

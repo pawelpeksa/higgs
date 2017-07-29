@@ -24,16 +24,16 @@ def main():
             model = HiggsLogisticRegression()
 
         init = tf.global_variables_initializer()   
-        
+
         sess.run(init)
 
         logistic_acus = []
 
         for i in range(25):
-            sys.stdout.write('EPOCH: %d' % (i + 1))
+            logger().info('EPOCH: %d' % (i + 1))
             train(model, higgs.train, 8 * 1024)
             valid_auc = evaluate(model, higgs.valid, 32)
-            print 'VALID AUC: %.3f' % valid_auc
+            logger().info(' VALID AUC: %.3f' % valid_auc)
             logistic_acus += [valid_auc]
 
     higgs_data = logger().info('execution finished')
@@ -44,17 +44,38 @@ def load_data():
 
     data_dir = Config.DATA_DIR
 
+    test_data_f = 0.25 # test data fraction out of entire dataset
+    valid_data_f = 0.25 # valid data fraction out of test dataset
+
+
     df = pd.read_csv(data_dir + Config.HIGGS_10000, header=None)
     df = df.astype(np.float32)
 
-    train_data = df.values[:-5000]
+    data_len = len(df)
+
+    test_data_len = int(test_data_f * data_len)
+
+    train_data = df.values[:-(test_data_len)]
+
     perm = np.random.permutation(len(train_data))
 
     ptrain_data = train_data[perm]
+    valid_data_len = int(valid_data_f * test_data_len)
 
-    np.save(data_dir + "higgs_train.npy", ptrain_data[:-500])
-    np.save(data_dir + "higgs_valid.npy", ptrain_data[-500:])
-    np.save(data_dir + "higgs_test.npy", df.values[-500:])
+    train_data = ptrain_data[:-valid_data_len]
+    valid_data = ptrain_data[-valid_data_len:]
+    test_data = df.values[-(test_data_len):]
+
+    np.save(data_dir + "higgs_train.npy", train_data)
+    np.save(data_dir + "higgs_valid.npy", valid_data)
+    np.save(data_dir + "higgs_test.npy", test_data)
+
+    logger().info("Data len: %d" % data_len)
+    logger().info("Train data len: %d" % len(train_data) )
+    logger().info("Valid data len: %d" % len(valid_data))
+    logger().info("Test data len: %d" % len(test_data))
+
+    logger().info('data loaded')
 
     return HiggsDataset(data_dir)
 
