@@ -7,8 +7,9 @@ class Configuration:
     def __init__(self):
         pass
 
-    HIGGS_0_25 = 'higgsReduced_025.csv'
-    HIGGS_10000 = 'higgs_10000.csv'
+    HIGGS_0_25 = 'data_025/HIGGS.csv'
+    HIGGS_10000 = 'data_small/HIGGS.csv'
+    DATA_DIR = './data/'
     LOGGER_NAME = 'higgs_main_logger'
     LOG_DIR = './logs/'
 
