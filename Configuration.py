@@ -9,6 +9,7 @@ class Configuration:
 
     HIGGS_0_25 = 'data_025/HIGGS.csv'
     HIGGS_10000 = 'data_small/HIGGS.csv'
+    HIGGS_ALL = 'data_all/HIGGS.csv.gz'
     DATA_DIR = './data/'
     LOGGER_NAME = 'higgs_main_logger'
     LOG_DIR = './logs/'

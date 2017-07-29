@@ -7,7 +7,7 @@ import tensorflow as tf
 from sklearn.metrics import roc_auc_score
 
 from Configuration import Configuration as Config
-from HiggsLogisticRegression import HiggsLogisticRegression
+from HiggsModels import *
 from HiggsDataset import HiggsDataset
 
 sess = tf.Session()
@@ -20,8 +20,9 @@ def main():
     higgs = load_data()
 
     with sess.as_default():
-        with tf.variable_scope('model1', reuse=None):
-            model = HiggsLogisticRegression()
+        with tf.variable_scope('model11', reuse=None):
+            # model = HiggsLogisticRegression()
+            model = HiggsAdamBNDropoutNN(num_layers=6, size=500, keep_prob=0.9)
 
         init = tf.global_variables_initializer()   
 
@@ -32,7 +33,7 @@ def main():
         for i in range(25):
             logger().info('EPOCH: %d' % (i + 1))
             train(model, higgs.train, 8 * 1024)
-            valid_auc = evaluate(model, higgs.valid, 32)
+            valid_auc = evaluate(model, higgs.valid, 1024)
             logger().info(' VALID AUC: %.3f' % valid_auc)
             logistic_acus += [valid_auc]
 
@@ -44,36 +45,37 @@ def load_data():
 
     data_dir = Config.DATA_DIR
 
-    test_data_f = 0.25 # test data fraction out of entire dataset
-    valid_data_f = 0.25 # valid data fraction out of test dataset
+    # TOSO: id *.npy doesn't exist
+    # test_data_f = 0.25 # test data fraction out of entire dataset
+    # valid_data_f = 0.25 # valid data fraction out of test dataset
 
 
-    df = pd.read_csv(data_dir + Config.HIGGS_10000, header=None)
-    df = df.astype(np.float32)
+    # df = pd.read_csv(data_dir + Config.HIGGS_ALL, header=None)
+    # df = df.astype(np.float32)
 
-    data_len = len(df)
+    # data_len = len(df)
 
-    test_data_len = int(test_data_f * data_len)
+    # test_data_len = int(test_data_f * data_len)
 
-    train_data = df.values[:-(test_data_len)]
+    # train_data = df.values[:-(test_data_len)]
 
-    perm = np.random.permutation(len(train_data))
+    # perm = np.random.permutation(len(train_data))
 
-    ptrain_data = train_data[perm]
-    valid_data_len = int(valid_data_f * test_data_len)
+    # ptrain_data = train_data[perm]
+    # valid_data_len = int(valid_data_f * test_data_len)
 
-    train_data = ptrain_data[:-valid_data_len]
-    valid_data = ptrain_data[-valid_data_len:]
-    test_data = df.values[-(test_data_len):]
+    # train_data = ptrain_data[:-valid_data_len]
+    # valid_data = ptrain_data[-valid_data_len:]
+    # test_data = df.values[-(test_data_len):]
 
-    np.save(data_dir + "higgs_train.npy", train_data)
-    np.save(data_dir + "higgs_valid.npy", valid_data)
-    np.save(data_dir + "higgs_test.npy", test_data)
+    # np.save(data_dir + "higgs_train.npy", train_data)
+    # np.save(data_dir + "higgs_valid.npy", valid_data)
+    # np.save(data_dir + "higgs_test.npy", test_data)
 
-    logger().info("Data len: %d" % data_len)
-    logger().info("Train data len: %d" % len(train_data) )
-    logger().info("Valid data len: %d" % len(valid_data))
-    logger().info("Test data len: %d" % len(test_data))
+    # logger().info("Data len: %d" % data_len)
+    # logger().info("Train data len: %d" % len(train_data) )
+    # logger().info("Valid data len: %d" % len(valid_data))
+    # logger().info("Test data len: %d" % len(test_data))
 
     logger().info('data loaded')
 
@@ -85,7 +87,7 @@ def train(model, dataset, batch_size = 16):
 
     for i in range(epoch_size):
         train_x, train_y = dataset.next_batch(batch_size)
-        loss, _ = sess.run([model.loss, model.train_op], {model.x: train.x, model.y: train_y}) 
+        loss, _ = sess.run([model.loss, model.train_op], {model.x: train_x, model.y: train_y}) 
 
         losses.append(loss)
         if i % (epoch_size / 5) == 5:
