@@ -1,4 +1,14 @@
-# Byte-compiled / optimized / DLL files
+#some tmp files?
+._*
+
+#logs
+logs/
+
+#data
+data_025
+data_small
+
+#Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
