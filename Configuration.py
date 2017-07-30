@@ -15,15 +15,16 @@ class Configuration:
 
     REGENERATE_DATA = True
 
-    ALL_DATA_FRACTION = 0.1 # how much data to use from entire higgs dataset (11M records)
+    ALL_DATA_FRACTION = 0.25 # how much data to use from entire higgs dataset (11M records)
     TEST_DATA_FRACTION = 0.25 # test data fraction out of entire dataset
     VALID_DATA_FRACTION = 0.25 # valid data fraction out of test dataset
 
     # which columns should be taken to process
     # from 0 to last column, higgs data has 28 features so columns 0:27
-
+    # higgs dataset : 1 column - label, 2-22 coulmns - 21 low level features, 22-28 columns - high level features
+    # TODO: bug here, start column now has to be always 0
     FEATURES_START_COL = 0 
-    FEATURES_END_COL = 27
+    FEATURES_END_COL = 21
 
     @staticmethod
     def configure_logger():
