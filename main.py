@@ -7,6 +7,7 @@ import tensorflow as tf
 from sklearn.metrics import roc_auc_score
 
 from Configuration import Configuration as Config
+from Utils import Utils
 from HiggsModels import *
 from HiggsDataset import HiggsDataset
 
@@ -39,47 +40,73 @@ def main():
 
     higgs_data = logger().info('execution finished')
 
+def load_np_data(path):
+        return np.load(path)
 
 def load_data():
     logger().info('loading data')
 
     data_dir = Config.DATA_DIR
 
-    # TOSO: id *.npy doesn't exist
-    # test_data_f = 0.25 # test data fraction out of entire dataset
-    # valid_data_f = 0.25 # valid data fraction out of test dataset
+    train_path = data_dir + "higgs_train.npy"
+    valid_path = data_dir + "higgs_valid.npy"
+    test_path = data_dir + "higgs_test.npy"
 
+    train_data = None
+    valid_data = None
+    test_data = None
 
-    # df = pd.read_csv(data_dir + Config.HIGGS_ALL, header=None)
-    # df = df.astype(np.float32)
+    if not (Utils.file_exist(train_path) and Utils.file_exist(valid_path) and Utils.file_exist(test_path)):
 
-    # data_len = len(df)
+        logger().info('preparing data')
 
-    # test_data_len = int(test_data_f * data_len)
+        all_data_f = Config.ALL_DATA_FRACTION  # how much data to use 
+        test_data_f = Config.TEST_DATA_FRACTION # test data fraction out of entire dataset
+        valid_data_f = Config.VALID_DATA_FRACTION # valid data fraction out of test dataset
 
-    # train_data = df.values[:-(test_data_len)]
+        df = pd.read_csv(data_dir + Config.HIGGS_ALL, header=None)
+        df = df.astype(np.float32)
 
-    # perm = np.random.permutation(len(train_data))
+        data_len = len(df)
 
-    # ptrain_data = train_data[perm]
-    # valid_data_len = int(valid_data_f * test_data_len)
+        perm = np.random.permutation(data_len)
+        all_data = df.values
+        all_data = all_data[perm]
 
-    # train_data = ptrain_data[:-valid_data_len]
-    # valid_data = ptrain_data[-valid_data_len:]
-    # test_data = df.values[-(test_data_len):]
+        test_data_len = int(test_data_f * data_len)
 
-    # np.save(data_dir + "higgs_train.npy", train_data)
-    # np.save(data_dir + "higgs_valid.npy", valid_data)
-    # np.save(data_dir + "higgs_test.npy", test_data)
+        train_data = all_data[:-(test_data_len)]
 
-    # logger().info("Data len: %d" % data_len)
-    # logger().info("Train data len: %d" % len(train_data) )
-    # logger().info("Valid data len: %d" % len(valid_data))
-    # logger().info("Test data len: %d" % len(test_data))
+        perm = np.random.permutation(len(train_data))
+
+        ptrain_data = train_data[perm]
+        valid_data_len = int(valid_data_f * test_data_len)
+
+        train_data = ptrain_data[:-valid_data_len]
+        valid_data = ptrain_data[-valid_data_len:]
+        test_data = all_data[-(test_data_len):]
+
+        np.save(train_path, train_data)
+        np.save(valid_path, valid_data)
+        np.save(test_path, test_data)
+
+        logger().info("Data len: %d" % data_len)
+        logger().info("Train data len: %d" % len(train_data) )
+        logger().info("Valid data len: %d" % len(valid_data))
+        logger().info("Test data len: %d" % len(test_data))
+
+    else:
+        logger().info('data already prepared, loading np arrays')
+
+        train_data = load_np_data(train_path)
+        valid_data = load_np_data(valid_path)
+        test_data = load_np_data(test_path)
+
+    assert train_data is not None and valid_data is not None and test_data is not None, 'data not loaded'
 
     logger().info('data loaded')
 
-    return HiggsDataset(data_dir)
+    return HiggsDataset(train_data, valid_data, test_data)
 
 def train(model, dataset, batch_size = 16):
     epoch_size = dataset.n / batch_size

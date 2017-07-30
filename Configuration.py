@@ -7,12 +7,15 @@ class Configuration:
     def __init__(self):
         pass
 
-    HIGGS_0_25 = 'data_025/HIGGS.csv'
-    HIGGS_10000 = 'data_small/HIGGS.csv'
-    HIGGS_ALL = 'data_all/HIGGS.csv.gz'
+    HIGGS_ALL = 'HIGGS.csv.gz'
+    HIGGS_SMALL = 'HIGGS_10000.csv'
     DATA_DIR = './data/'
     LOGGER_NAME = 'higgs_main_logger'
     LOG_DIR = './logs/'
+
+    ALL_DATA_FRACTION = 0.25 # how much data to use from entire higgs dataset (11M records)
+    TEST_DATA_FRACTION = 0.25 # test data fraction out of entire dataset
+    VALID_DATA_FRACTION = 0.25 # valid data fraction out of test dataset
 
     @staticmethod
     def configure_logger():

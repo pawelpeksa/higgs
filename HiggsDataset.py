@@ -2,18 +2,10 @@ from Dataset import Dataset
 
 import numpy as np
 
-def load_data(path):
-        return np.load(path)
-
 class HiggsDataset(object):
-    def __init__(self, data_dir):
-        data = load_data(data_dir + "/higgs_train.npy")
-        self.train = Dataset(data[:, 1:], data[:, 0])
-
-        data = load_data(data_dir + "/higgs_valid.npy")
-        self.valid = Dataset(data[:, 1:], data[:, 0])
-
-        data = load_data(data_dir + "/higgs_test.npy")
-        self.test = Dataset(data[:, 1:], data[:, 0])
+    def __init__(self, train_set, valid_set, test_set):
+        self.train = Dataset(train_set[:, 1:], train_set[:, 0])
+        self.valid = Dataset(valid_set[:, 1:], valid_set[:, 0])
+        self.test = Dataset(test_set[:, 1:], test_set[:, 0])
 
     

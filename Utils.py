@@ -10,3 +10,7 @@ class Utils:
     def maybe_create_directory(dir):
         if not os.path.exists(dir):
             os.makedirs(dir)
+
+    @staticmethod
+    def file_exist(path):
+        return os.path.exists(path)        
