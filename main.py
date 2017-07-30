@@ -23,7 +23,8 @@ def main():
     with sess.as_default():
         with tf.variable_scope('model11', reuse=None):
             # model = HiggsLogisticRegression()
-            model = HiggsAdamBNDropoutNN(num_layers=6, size=500, keep_prob=0.9)
+            # model = HiggsAdamBNDropoutNN(num_layers=6, size=500, keep_prob=0.9)
+            model = HiggsAdamBNDropoutNN(num_layers=1, size=500, keep_prob=0.9)
 
         init = tf.global_variables_initializer()   
 
@@ -56,7 +57,10 @@ def load_data():
     valid_data = None
     test_data = None
 
-    if not (Utils.file_exist(train_path) and Utils.file_exist(valid_path) and Utils.file_exist(test_path)):
+    regenerate_data = Config.REGENERATE_DATA
+    logger().info('Regenerate data:' + str(regenerate_data)) 
+
+    if (not (Utils.file_exist(train_path) and Utils.file_exist(valid_path) and Utils.file_exist(test_path))) or regenerate_data:
 
         logger().info('preparing data')
 
@@ -72,6 +76,15 @@ def load_data():
         perm = np.random.permutation(data_len)
         all_data = df.values
         all_data = all_data[perm]
+
+        logger().info("Taking columns: %d:%d" % (Config.FEATURES_START_COL, Config.FEATURES_END_COL))
+        all_data = all_data[:, Config.FEATURES_START_COL : Config.FEATURES_END_COL + 2] # +1 first column is Y, +1 because numpy [:, a:b] takes b exclusive and we want inclusive = 1 + 1 = 2
+
+        data_len *= all_data_f
+        data_len = int(data_len)
+        all_data = all_data[:data_len]
+
+        logger().info("Data len: %d" % data_len)
 
         test_data_len = int(test_data_f * data_len)
 
@@ -90,17 +103,16 @@ def load_data():
         np.save(valid_path, valid_data)
         np.save(test_path, test_data)
 
-        logger().info("Data len: %d" % data_len)
-        logger().info("Train data len: %d" % len(train_data) )
-        logger().info("Valid data len: %d" % len(valid_data))
-        logger().info("Test data len: %d" % len(test_data))
-
     else:
         logger().info('data already prepared, loading np arrays')
 
         train_data = load_np_data(train_path)
         valid_data = load_np_data(valid_path)
         test_data = load_np_data(test_path)
+
+    logger().info("Train data len: %d" % len(train_data) )
+    logger().info("Valid data len: %d" % len(valid_data))
+    logger().info("Test data len: %d" % len(test_data))    
 
     assert train_data is not None and valid_data is not None and test_data is not None, 'data not loaded'
 

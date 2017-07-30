@@ -1,4 +1,7 @@
 import tensorflow as tf
+from Configuration import Configuration as Config
+
+parameters_n = Config.FEATURES_END_COL - Config.FEATURES_START_COL + 1
 
 def linear(x, name, size, bias=True):
     w = tf.get_variable(name + '/W', [x.get_shape()[1], size]) 
@@ -16,7 +19,7 @@ def batch_norm(x, name):
 
 class HiggsLogisticRegression(object):
     def __init__(self, lr=0.1):
-        self.x = x = tf.placeholder(tf.float32, [None, 28])
+        self.x = x = tf.placeholder(tf.float32, [None, parameters_n])
         self.y = tf.placeholder(tf.float32, [None])
         x = linear(x, 'regression', 1)
         self.p = tf.nn.sigmoid(x)
@@ -26,7 +29,7 @@ class HiggsLogisticRegression(object):
 
 class HiggsNeuralNetwork(object):
     def __init__(self, num_layers=1, size=100, lr=0.1):
-        self.x = x = tf.placeholder(tf.float32, [None, 28])
+        self.x = x = tf.placeholder(tf.float32, [None, parameters_n])
         self.y = tf.placeholder(tf.float32, [None])
 
         for i in range(num_layers):
@@ -40,11 +43,11 @@ class HiggsNeuralNetwork(object):
 
 class HiggsBNNeuralNetwork(object):
     def __init__(self, num_layers=1, size=100, lr=0.1):
-        self.x = x = tf.placeholder(tf.float32, [None, 28])
+        self.x = x = tf.placeholder(tf.float32, [None, parameters_n])
         self.y = tf.placeholder(tf.float32, [None])
 
         for i in range(num_layers):
-            x = tf.nn.relu(batch_norm(linear(x, 'linear_%d' % i, size)))
+            x = tf.nn.relu(batch_norm(linear(x, 'linear_%d' % i, size), 'bn_%d' % i))
 
         x = linear(x, 'regression', 1)
         self.p = tf.nn.sigmoid(x)
@@ -54,7 +57,7 @@ class HiggsBNNeuralNetwork(object):
 
 class HiggsAdamBNNeuralNetwork(object):
     def __init__(self, num_layers=1, size=100, lr=0.1):
-        self.x = x = tf.placeholder(tf.float32, [None, 28])
+        self.x = x = tf.placeholder(tf.float32, [None, parameters_n])
         self.y = tf.placeholder(tf.float32, [None])
 
         for i in range(num_layers):
@@ -68,7 +71,7 @@ class HiggsAdamBNNeuralNetwork(object):
 
 class HiggsAdamBNDropoutNN(object):
     def __init__(self, num_layers=1, size=100, lr=0.1, keep_prob=1.0):
-        self.x = x = tf.placeholder(tf.float32, [None, 28])
+        self.x = x = tf.placeholder(tf.float32, [None, parameters_n])
         self.y = tf.placeholder(tf.float32, [None])
 
         for i in range(num_layers):

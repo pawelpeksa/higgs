@@ -8,14 +8,22 @@ class Configuration:
         pass
 
     HIGGS_ALL = 'HIGGS.csv.gz'
-    HIGGS_SMALL = 'HIGGS_10000.csv'
+    # HIGGS_SMALL = 'HIGGS_10000.csv'
     DATA_DIR = './data/'
     LOGGER_NAME = 'higgs_main_logger'
     LOG_DIR = './logs/'
 
-    ALL_DATA_FRACTION = 0.25 # how much data to use from entire higgs dataset (11M records)
+    REGENERATE_DATA = True
+
+    ALL_DATA_FRACTION = 0.1 # how much data to use from entire higgs dataset (11M records)
     TEST_DATA_FRACTION = 0.25 # test data fraction out of entire dataset
     VALID_DATA_FRACTION = 0.25 # valid data fraction out of test dataset
+
+    # which columns should be taken to process
+    # from 0 to last column, higgs data has 28 features so columns 0:27
+
+    FEATURES_START_COL = 0 
+    FEATURES_END_COL = 27
 
     @staticmethod
     def configure_logger():
