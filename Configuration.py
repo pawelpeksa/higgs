@@ -13,7 +13,7 @@ class Configuration:
     LOGGER_NAME = 'higgs_main_logger'
     LOG_DIR = './logs/'
 
-    REGENERATE_DATA = True
+    REGENERATE_DATA = False
 
     ALL_DATA_FRACTION = 0.25 # how much data to use from entire higgs dataset (11M records)
     TEST_DATA_FRACTION = 0.25 # test data fraction out of entire dataset

@@ -1,6 +1,6 @@
 import logging
-import numpy as np
 import sys
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 
@@ -12,19 +12,24 @@ from HiggsModels import *
 from HiggsDataset import HiggsDataset
 
 sess = tf.Session()
-
+    
 def main():
     print 'higgs 0.1'
 
     Config.configure_logger()
 
-    higgs = load_data()
+    higgs_data = load_data(0.05)
+    
+    run_higgs(higgs_data)
 
+    higgs_data = logger().info('execution finished')
+
+def run_higgs(higgs_data):
     with sess.as_default():
-        with tf.variable_scope('model11', reuse=None):
+        with tf.variable_scope('model1', reuse=None):
             # model = HiggsLogisticRegression()
             # model = HiggsAdamBNDropoutNN(num_layers=6, size=500, keep_prob=0.9)
-            model = HiggsAdamBNDropoutNN(num_layers=2, size=500, keep_prob=0.9)
+            model = HiggsAdamBNDropoutNN(num_layers=1, size=500, keep_prob=0.9)
 
         init = tf.global_variables_initializer()   
 
@@ -34,24 +39,25 @@ def main():
 
         for i in range(25):
             logger().info('EPOCH: %d' % (i + 1))
-            train(model, higgs.train, 8 * 1024)
-            valid_auc = evaluate(model, higgs.valid, 1024)
+            train(model, higgs_data.train, 2 * 1024)
+            valid_auc = evaluate(model, higgs_data.valid, 512)
             logger().info(' VALID AUC: %.3f' % valid_auc)
             logistic_acus += [valid_auc]
-
-    higgs_data = logger().info('execution finished')
 
 def load_np_data(path):
         return np.load(path)
 
-def load_data():
+def higgs_data_tail(frac):
+    return "_" + str(frac) + ".npy"
+
+def load_data(data_frac):
     logger().info('loading data')
 
     data_dir = Config.DATA_DIR
 
-    train_path = data_dir + "higgs_train.npy"
-    valid_path = data_dir + "higgs_valid.npy"
-    test_path = data_dir + "higgs_test.npy"
+    train_path = data_dir + "higgs_train" + higgs_data_tail(data_frac)
+    valid_path = data_dir + "higgs_valid" + higgs_data_tail(data_frac)
+    test_path = data_dir + "higgs_test" + higgs_data_tail(data_frac)
 
     train_data = None
     valid_data = None
@@ -64,7 +70,7 @@ def load_data():
 
         logger().info('preparing data')
 
-        all_data_f = Config.ALL_DATA_FRACTION  # how much data to use 
+        all_data_f = data_frac # how much data to use 
         test_data_f = Config.TEST_DATA_FRACTION # test data fraction out of entire dataset
         valid_data_f = Config.VALID_DATA_FRACTION # valid data fraction out of test dataset
 
@@ -157,4 +163,5 @@ def logger():
 
 
 if __name__ == '__main__':
-    main()    
+    main()
+
