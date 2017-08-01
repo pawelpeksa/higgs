@@ -24,7 +24,7 @@ def main():
         with tf.variable_scope('model11', reuse=None):
             # model = HiggsLogisticRegression()
             # model = HiggsAdamBNDropoutNN(num_layers=6, size=500, keep_prob=0.9)
-            model = HiggsAdamBNDropoutNN(num_layers=1, size=500, keep_prob=0.9)
+            model = HiggsAdamBNDropoutNN(num_layers=2, size=500, keep_prob=0.9)
 
         init = tf.global_variables_initializer()   
 
