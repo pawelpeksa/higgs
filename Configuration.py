@@ -12,6 +12,7 @@ class Configuration:
     DATA_DIR = './data/'
     LOGGER_NAME = 'higgs_main_logger'
     LOG_DIR = './logs/'
+    HIGGS_FRACS = [0.001, 0.005, 0.01, 0.05, 0.15, 0.25]
 
     REGENERATE_DATA = False
 

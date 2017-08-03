@@ -29,17 +29,25 @@ def main():
     print 'higgs 0.1'
 
     Config.configure_logger()
-
-    # config =  determine_parameters_all(x_train, y_train, x_test, y_test)
-    # config.save('fileName')		
-    # save optimized parameters
-
-    # run all methods
-    # calc auc and plot 
-
-    higgs_data = load_data(0.05)
     
-    # run_higgs(higgs_data)
+    higgs_fracs = Config.HIGGS_FRACS	
+    
+    for higgs_frac in higgs_fracs:
+    	higgs_data = load_data(higgs_frac)
+
+    	# methods_config =  determine_parameters_all(x_train, y_train, x_test, y_test)
+    	# methods_config.save('results/methodsConfig_' + str(higgs_frac) + '.dat')	
+
+        plt.figure()
+	
+	# run_all_clfs(methods_config, higgs_data)
+
+    	# calc auc and plot 
+	# run_higgs() #TODO: add plotting higgs
+	# calc auc aand plot
+
+        plt.savefig('results/foo2.pdf')
+    
 
     tree = DecisionTreeClassifier(max_depth=10)
     forest = RandomForestClassifier(max_depth=5, n_estimators=5)
@@ -88,6 +96,9 @@ def run_clf(clf, higgs_data):
     logger().info('running clf:' + clf.__class__.__name__)
     clf.fit(higgs_data.train.x, higgs_data.train.y)
 
+    #TODO: save_model
+    #TODO: seperate fitting and prediction
+
     prediction = clf.predict_proba(higgs_data.valid.x)
 
     plot_roc((prediction[:,1]).ravel(), higgs_data.valid.y.ravel())
@@ -109,7 +120,6 @@ def plot_roc(ps, ys):
     plt.title('Receiver operating characteristic example')
     plt.legend(loc="lower right")
     
-    plt.savefig('results/foo2.pdf')
 
 def run_higgs(higgs_data):
     with sess.as_default():
