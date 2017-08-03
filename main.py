@@ -1,5 +1,6 @@
 import logging
 import sys
+import threading
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -45,15 +46,19 @@ def main():
 
         plt.figure()
 	
-	# run_all_clfs(methods_config, higgs_data)
+        run_all_clfs(methods_config, higgs_data)
 
-    	# calc auc and plot 
-	# run_higgs() #TODO: add plotting higgs
-	# calc auc aand plot
+        # calc auc and plot 
+        # run_higgs() #TODO: add plotting higgs
+        # calc auc aand plot
 
         plt.savefig('results/foo2.pdf')
     
 
+    logger().info('execution finished')
+
+
+def run_all_clfs(methods_config, higgs_data):
     tree = DecisionTreeClassifier(max_depth=10)
     forest = RandomForestClassifier(max_depth=5, n_estimators=5)
     SVM = svm.SVC(kernel='linear', C=0.1, probability=True)
@@ -64,31 +69,19 @@ def main():
                             random_state=1,
                             learning_rate='adaptive')
 
-    run_clf(forest, higgs_data)
-    run_clf(tree, higgs_data)
-    run_clf(ann, higgs_data)
-    run_clf(SVM, higgs_data)
-
-    logger().info('execution finished')
-
-
-def run_all_clfs(methods_config, higgs_data):
-    tree = DecisionTreeClassifier(max_depth=10)
-    forest = RandomForestClassifier(max_depth=5, n_estimators=5)
-    SVM = svm.SVC(kernel='linear', C=0.1)
-    ann = MLPClassifier(solver='adam',
-                            max_iter=300,
-                            alpha=0.05,
-                            hidden_layer_sizes=(10,),
-                            random_state=1,
-                            learning_rate='adaptive')
-
     threads = list()
+    results = dict()
 
-    threads.append(threading.Thread(target=run_clf, args=(tree, higgs_data)))
-    threads.append(threading.Thread(target=run_clf, args=(forest, higgs_data)))
-    threads.append(threading.Thread(target=run_clf, args=(SVM, higgs_data)))
-    threads.append(threading.Thread(target=run_clf, args=(ann, higgs_data)))
+    results[Config.TREE_KEY] = ()
+    results[Config.FOREST_KEY] = ()
+    results[Config.SVM_KEY] = ()
+    results[Config.ANN_KEY] = ()
+
+    threads.append(threading.Thread(target=run_clf, args=(tree, higgs_data, results[Config.TREE_KEY])))
+    threads.append(threading.Thread(target=run_clf, args=(forest, higgs_data, results[Config.FOREST_KEY])))
+    threads.append(threading.Thread(target=run_clf, args=(SVM, higgs_data, results[Config.SVM_KEY])))
+    threads.append(threading.Thread(target=run_clf, args=(ann, higgs_data, results[Config.ANN_KEY])))
+
 
     for thread in threads:
         thread.start()
@@ -97,23 +90,22 @@ def run_all_clfs(methods_config, higgs_data):
         thread.join()
 
 
-def run_clf(clf, higgs_data):
+def run_clf(clf, higgs_data, results):
     logger().info('running clf:' + clf.__class__.__name__)
     clf.fit(higgs_data.train.x, higgs_data.train.y)
 
     #TODO: save_model
-    #TODO: seperate fitting and prediction
 
     prediction = clf.predict_proba(higgs_data.valid.x)
 
-    plot_roc((prediction[:,1]).ravel(), higgs_data.valid.y.ravel())
+    ps, ys = (prediction[:,1]).ravel(), higgs_data.valid.y.ravel()
+    results = ps, ys
 
 
 def plot_roc(ps, ys):
     fpr, tpr, _ = roc_curve(ys, ps)
     roc_auc = auc(fpr, tpr)
 
-    plt.figure()
     lw = 2
     plt.plot(fpr, tpr, color='darkorange',
              lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
@@ -185,9 +177,6 @@ def load_data(data_frac):
         all_data = df.values
         all_data = all_data[perm]
 
-        logger().info("Taking columns: %d:%d" % (Config.FEATURES_START_COL, Config.FEATURES_END_COL))
-        all_data = all_data[:, Config.FEATURES_START_COL : Config.FEATURES_END_COL + 2] # +1 first column is Y, +1 because numpy [:, a:b] takes b exclusive and we want inclusive = 1 + 1 = 2
-
         data_len *= all_data_f
         data_len = int(data_len)
         all_data = all_data[:data_len]
@@ -218,16 +207,31 @@ def load_data(data_frac):
         valid_data = load_np_data(valid_path)
         test_data = load_np_data(test_path)
 
-    logger().info("Train data len: %d" % len(train_data) )
-    logger().info("Valid data len: %d" % len(valid_data))
-    logger().info("Test data len: %d" % len(test_data))    
+    logger().info("Loading columns: %d:%d" % (Config.FEATURES_START_COL, Config.FEATURES_END_COL))
+
+    load_columns(train_data, valid_data, test_data)
 
     assert train_data is not None and valid_data is not None and test_data is not None, 'data not loaded'
 
+    logger().info("Train data len: %d" % len(train_data))
+    logger().info("Valid data len: %d" % len(valid_data))
+    logger().info("Test data len: %d" % len(test_data))    
     logger().info('data loaded')
 
     return HiggsDataset(train_data, valid_data, test_data)
 
+
+def load_columns(train_data, valid_data, test_data):
+    columns = np.arange(Config.FEATURES_START_COL, Config.FEATURES_END_COL + 1)
+    columns = np.concatenate([[0],columns]) #  concatenate label
+
+    logger().info('logging columns' + str(columns))
+
+    train_data = train_data[:, columns]
+    valid_data = valid_data[:, columns]
+    test_data = test_data[:, columns]
+
+    
 def train(model, dataset, batch_size = 16):
     epoch_size = dataset.n / batch_size
     losses = []

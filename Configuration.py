@@ -7,13 +7,14 @@ class Configuration:
     def __init__(self):
         pass
 
-    HIGGS_ALL = 'HIGGS.csv.gz'
-    # HIGGS_SMALL = 'HIGGS_10000.csv'
+    # HIGGS_ALL = 'HIGGS.csv.gz'
+    HIGGS_ALL = 'HIGGS_10000.csv'
+    # HIGGS_ALL = 'sim.csv'
     DATA_DIR = './data/'
     LOGGER_NAME = 'higgs_main_logger'
     LOG_DIR = './logs/'
     HIGGS_FRACS = [0.001, 0.005, 0.01, 0.05, 0.15, 0.25]
-    HIGGS_FRACS_TEST = [0.00001]
+    HIGGS_FRACS_TEST = [0.1]
 
     REGENERATE_DATA = False
 	
@@ -25,11 +26,16 @@ class Configuration:
     VALID_DATA_FRACTION = 0.25 # valid data fraction out of test dataset
 
     # which columns should be taken to process
-    # from 0 to last column, higgs data has 28 features so columns 0:27
-    # higgs dataset : 1 column - label, 2-22 coulmns - 21 low level features, 22-28 columns - high level features
-    # TODO: bug here, start column now has to be always 0
-    FEATURES_START_COL = 0 
-    FEATURES_END_COL = 21
+    # from 0 to last column, higgs data has 28 features so columns 1:27
+    # higgs dataset : 0 column - label, 1-21 coulmns - 21 low level features, 22-28 columns - 7 high level features
+    FEATURES_START_COL = 1 #  including
+    FEATURES_END_COL = 21 #  including 
+
+    #  KEYS
+    SVM_KEY = 'svm'
+    ANN_KEY = 'ann'
+    FOREST_KEY = 'random_forest'
+    TREE_KEY = 'decision_tree'
 
     @staticmethod
     def configure_logger():
