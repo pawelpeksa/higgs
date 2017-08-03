@@ -29,6 +29,8 @@ import matplotlib.pyplot as plt
 
 sess = tf.Session()
 
+#TODO: adjust paremeters
+
 def main():
     print 'higgs 0.1'
 
@@ -42,46 +44,51 @@ def main():
 
     	methods_config =  determine_parameters_all(higgs_data.train.x, higgs_data.train.y, 
 			                           higgs_data.valid.x, higgs_data.valid.y)
+
     	methods_config.save('results/methodsConfig_' + str(higgs_frac) + '.dat')	
 
         plt.figure()
 	
-        run_all_clfs(methods_config, higgs_data)
+        results = run_all_clfs(methods_config, higgs_data)
+        ps, ys = run_higgs(higgs_data)
 
-        # calc auc and plot 
-        # run_higgs() #TODO: add plotting higgs
-        # calc auc aand plot
+        plot_from_dict(results[Config.TREE_KEY], 'tree')
+        plot_from_dict(results[Config.FOREST_KEY], 'forest')
+        plot_from_dict(results[Config.SVM_KEY], 'svm')
+        plot_from_dict(results[Config.ANN_KEY], 'ann')
+        plot_roc(ps, ys, 'dnn')
 
-        plt.savefig('results/foo2.pdf')
+        plt.savefig('results/' + 'roc_' + str(higgs_frac) + '.pdf')
     
 
     logger().info('execution finished')
 
 
 def run_all_clfs(methods_config, higgs_data):
-    tree = DecisionTreeClassifier(max_depth=10)
-    forest = RandomForestClassifier(max_depth=5, n_estimators=5)
-    SVM = svm.SVC(kernel='linear', C=0.1, probability=True)
-    ann = MLPClassifier(solver='adam',
-                            max_iter=300,
-                            alpha=0.05,
-                            hidden_layer_sizes=(10,),
+    # TODO: pass parameters from methods config 
+    tree = DecisionTreeClassifier(max_depth=methods_config.decision_tree.max_depth)
+    forest = RandomForestClassifier(max_depth=methods_config.random_forest.max_depth, 
+                                    n_estimators=methods_config.random_forest.n_estimators)
+    SVM = svm.SVC(kernel='linear', C=methods_config.svm.C, probability=True)
+    ann = MLPClassifier(solver=methods_config.ann.solver,
+                            max_iter=Config.ANN_OPIMIZER_MAX_ITERATIONS,
+                            alpha=methods_config.ann.alpha,
+                            hidden_layer_sizes=(methods_config.ann.hidden_neurons,),
                             random_state=1,
                             learning_rate='adaptive')
 
     threads = list()
     results = dict()
 
-    results[Config.TREE_KEY] = ()
-    results[Config.FOREST_KEY] = ()
-    results[Config.SVM_KEY] = ()
-    results[Config.ANN_KEY] = ()
+    results[Config.TREE_KEY] = []
+    results[Config.FOREST_KEY] = []
+    results[Config.SVM_KEY] = []
+    results[Config.ANN_KEY] = []
 
     threads.append(threading.Thread(target=run_clf, args=(tree, higgs_data, results[Config.TREE_KEY])))
     threads.append(threading.Thread(target=run_clf, args=(forest, higgs_data, results[Config.FOREST_KEY])))
     threads.append(threading.Thread(target=run_clf, args=(SVM, higgs_data, results[Config.SVM_KEY])))
     threads.append(threading.Thread(target=run_clf, args=(ann, higgs_data, results[Config.ANN_KEY])))
-
 
     for thread in threads:
         thread.start()
@@ -89,26 +96,40 @@ def run_all_clfs(methods_config, higgs_data):
     for thread in threads:
         thread.join()
 
+    return results    
 
-def run_clf(clf, higgs_data, results):
+
+def run_clf(clf, higgs_data, result):
     logger().info('running clf:' + clf.__class__.__name__)
+
     clf.fit(higgs_data.train.x, higgs_data.train.y)
 
-    #TODO: save_model
+    #TODO: save_model?
 
-    prediction = clf.predict_proba(higgs_data.valid.x)
+    prediction = clf.predict_proba(higgs_data.test.x)
 
-    ps, ys = (prediction[:,1]).ravel(), higgs_data.valid.y.ravel()
-    results = ps, ys
+    ps, ys = (prediction[:,1]).ravel(), higgs_data.test.y.ravel()
+    result.append(ps)
+    result.append(ys)
+
+    logger().info('finished running clf:' + clf.__class__.__name__)
 
 
-def plot_roc(ps, ys):
+def plot_from_dict(psys, title):
+    ps, ys = psys
+    plot_roc(ps, ys, title)
+
+
+def plot_roc(ps, ys, title):
+    logger().info('Plot:' + title)
     fpr, tpr, _ = roc_curve(ys, ps)
     roc_auc = auc(fpr, tpr)
 
     lw = 2
-    plt.plot(fpr, tpr, color='darkorange',
-             lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+
+    label = title + ' ROC curve (area = %0.2f)' % roc_auc
+
+    plt.plot(fpr, tpr, lw=lw, label=label)
     plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
@@ -133,10 +154,14 @@ def run_higgs(higgs_data):
 
         for i in range(25):
             logger().info('EPOCH: %d' % (i + 1))
-            train(model, higgs_data.train, 2 * 1024)
-            valid_auc = evaluate(model, higgs_data.valid, 512)
+            train(model, higgs_data.train, 2 * 512)
+            ps, ys = evaluate(model, higgs_data.valid, 4)
+            valid_auc = roc_auc_score(ys, ps)
             logger().info(' VALID AUC: %.3f' % valid_auc)
             logistic_acus += [valid_auc]
+
+        return evaluate(model, higgs_data.valid, 4)
+            
 
 def load_np_data(path):
         return np.load(path)
@@ -209,7 +234,7 @@ def load_data(data_frac):
 
     logger().info("Loading columns: %d:%d" % (Config.FEATURES_START_COL, Config.FEATURES_END_COL))
 
-    load_columns(train_data, valid_data, test_data)
+    train_data, valid_data, test_data = load_columns(train_data, valid_data, test_data)
 
     assert train_data is not None and valid_data is not None and test_data is not None, 'data not loaded'
 
@@ -231,7 +256,9 @@ def load_columns(train_data, valid_data, test_data):
     valid_data = valid_data[:, columns]
     test_data = test_data[:, columns]
 
-    
+    return train_data, valid_data, test_data
+
+
 def train(model, dataset, batch_size = 16):
     epoch_size = dataset.n / batch_size
     losses = []
@@ -261,7 +288,7 @@ def evaluate(model, dataset, batch_size=32):
     ps = np.concatenate(ps).ravel()
     ys = np.concatenate(ys).ravel()       
 
-    return roc_auc_score(ys, ps)
+    return ps, ys
 
 
 if __name__ == '__main__':

@@ -36,7 +36,7 @@ class Optimizer():
         return -classifier.score(self._x_test, self._y_test)
 
     def _log_progress(self, classifier_str):
-        msg = classifier_str + 'optimizer progress:' + str((self._iteration / float(Configuration.HYPEROPT_EVALS_PER_SEARCH)) * 100) + '%'
+        msg = classifier_str + ' optimizer progress:' + str((self._iteration / float(Configuration.HYPEROPT_EVALS_PER_SEARCH)) * 100) + '%'
 	logger().info(msg)
 
     def _init_hyper_space(self):
