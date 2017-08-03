@@ -5,24 +5,111 @@ import pandas as pd
 import tensorflow as tf
 
 from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_curve
+from sklearn.metrics import auc
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import svm
 
 from Configuration import Configuration as Config
 from Utils import Utils
 from HiggsModels import *
 from HiggsDataset import HiggsDataset
 
+import matplotlib
+# Force matplotlib to not use any Xwindows backend.
+matplotlib.use('Agg') # has to be imported before pyplot
+import matplotlib.pyplot as plt
+
+
 sess = tf.Session()
-    
+
 def main():
     print 'higgs 0.1'
 
     Config.configure_logger()
 
+    # config =  determine_parameters_all(x_train, y_train, x_test, y_test)
+    # config.save('fileName')		
+    # save optimized parameters
+
+    # run all methods
+    # calc auc and plot 
+
     higgs_data = load_data(0.05)
     
-    run_higgs(higgs_data)
+    # run_higgs(higgs_data)
 
-    higgs_data = logger().info('execution finished')
+    tree = DecisionTreeClassifier(max_depth=10)
+    forest = RandomForestClassifier(max_depth=5, n_estimators=5)
+    SVM = svm.SVC(kernel='linear', C=0.1)
+    ann = MLPClassifier(solver='adam',
+                            max_iter=300,
+                            alpha=0.05,
+                            hidden_layer_sizes=(10,),
+                            random_state=1,
+                            learning_rate='adaptive')
+
+    run_clf(forest, higgs_data)
+    run_clf(tree, higgs_data)
+    run_clf(ann, higgs_data)
+    run_clf(SVM, higgs_data)
+
+    logger().info('execution finished')
+
+
+def run_all_clfs(methods_config, higgs_data):
+    tree = DecisionTreeClassifier(max_depth=10)
+    forest = RandomForestClassifier(max_depth=5, n_estimators=5)
+    SVM = svm.SVC(kernel='linear', C=0.1)
+    ann = MLPClassifier(solver='adam',
+                            max_iter=300,
+                            alpha=0.05,
+                            hidden_layer_sizes=(10,),
+                            random_state=1,
+                            learning_rate='adaptive')
+
+    threads = list()
+
+    threads.append(threading.Thread(target=run_clf, args=(tree, higgs_data)))
+    threads.append(threading.Thread(target=run_clf, args=(forest, higgs_data)))
+    threads.append(threading.Thread(target=run_clf, args=(SVM, higgs_data)))
+    threads.append(threading.Thread(target=run_clf, args=(ann, higgs_data)))
+
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+
+def run_clf(clf, higgs_data):
+    logger().info('running clf:' + clf.__class__.__name__)
+    clf.fit(higgs_data.train.x, higgs_data.train.y)
+
+    prediction = clf.predict_proba(higgs_data.valid.x)
+
+    plot_roc((prediction[:,1]).ravel(), higgs_data.valid.y.ravel())
+
+
+def plot_roc(ps, ys):
+    fpr, tpr, _ = roc_curve(ys, ps)
+    roc_auc = auc(fpr, tpr)
+
+    plt.figure()
+    lw = 2
+    plt.plot(fpr, tpr, color='darkorange',
+             lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic example')
+    plt.legend(loc="lower right")
+    
+    plt.savefig('results/foo2.pdf')
 
 def run_higgs(higgs_data):
     with sess.as_default():

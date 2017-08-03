@@ -1,3 +1,5 @@
+import json
+
 class MethodsConfiguration:
     def __init__(self):
         self.svm = SVM()
@@ -14,7 +16,12 @@ class MethodsConfiguration:
 
         return jsonObj
 
-#TODO: change namges of the class below to have suffic Config
+    def save(self, filepath):
+	 with open(file_name, filepath) as output:
+		 json.dump(config.toDict(), output) 
+
+
+#TODO: change namges of the class below to have suffix Config
 class SVM:
     def __init__(self):
         self.C = 0.1

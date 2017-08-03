@@ -1,11 +1,11 @@
 from hyperopt import fmin, tpe, space_eval, hp
 
 from sklearn.tree import DecisionTreeClassifier
-from MethodsConfiguration import SVM
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
 
 import numpy as np
+import threading 
 
 from Configuration import Configuration
 from MethodsConfiguration import *
@@ -199,3 +199,40 @@ class ANN_Optimizer(Optimizer):
         self.ann.hidden_neurons = result[0]
         self.ann.solver = result[1]
         self.ann.alpha = result[2]
+
+
+def determine_parameters_all(x_train, y_train, x_test, y_test):
+    print "determine parameters"
+    config = MethodsConfiguration()
+
+    print config.toDict()
+
+    threads = list()
+
+    svm_opt = SVM_Optimizer(x_train, y_train, x_test, y_test)
+    ann_opt = ANN_Optimizer(x_train, y_train, x_test, y_test)
+    tree_opt = DecisionTree_Optimizer(x_train, y_train, x_test, y_test)
+    forest_opt = RandomForest_Optimizer(x_train, y_train, x_test, y_test)
+
+    threads.append(threading.Thread(target=determine_parameters, args=(svm_opt,)))
+    threads.append(threading.Thread(target=determine_parameters, args=(ann_opt,)))
+    threads.append(threading.Thread(target=determine_parameters, args=(tree_opt,)))
+    threads.append(threading.Thread(target=determine_parameters, args=(forest_opt,)))
+
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+    config.svm = svm_opt.svm
+    config.ann = ann_opt.ann
+    config.decision_tree = tree_opt.decision_tree
+    config.random_forest = forest_opt.random_forest
+
+    return config
+
+
+
+
+
