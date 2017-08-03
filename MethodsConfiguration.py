@@ -17,8 +17,8 @@ class MethodsConfiguration:
         return jsonObj
 
     def save(self, filepath):
-	 with open(file_name, filepath) as output:
-		 json.dump(config.toDict(), output) 
+	 with open(filepath, 'w') as output:
+		 json.dump(self.toDict(), output) 
 
 
 #TODO: change namges of the class below to have suffix Config

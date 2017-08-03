@@ -3,11 +3,13 @@ from hyperopt import fmin, tpe, space_eval, hp
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn import svm
 
 import numpy as np
 import threading 
 
 from Configuration import Configuration
+from Configuration import logger
 from MethodsConfiguration import *
 
 
@@ -33,9 +35,9 @@ class Optimizer():
         classifier.fit(self._x_train, self._y_train)
         return -classifier.score(self._x_test, self._y_test)
 
-    def _print_progress(self, classifier_str):
-        print classifier_str, 'optimizer progress:', str(
-            (self._iteration / float(Configuration.HYPEROPT_EVALS_PER_SEARCH)) * 100), '%'
+    def _log_progress(self, classifier_str):
+        msg = classifier_str + 'optimizer progress:' + str((self._iteration / float(Configuration.HYPEROPT_EVALS_PER_SEARCH)) * 100) + '%'
+	logger().info(msg)
 
     def _init_hyper_space(self):
         raise NotImplementedError('Should have implemented this')
@@ -64,7 +66,7 @@ class RandomForest_Optimizer(Optimizer):
                              hp.choice(ESTIMATORS_KEY, np.arange(self._depth_begin, self._depth_end + 1))]
 
     def _objective(self, args):
-        Optimizer._print_progress(self, 'random forest')
+        Optimizer._log_progress(self, 'random forest')
         depth, estimators = args
 
         assert depth > 0 and estimators > 0, 'depth <= 0 or estimators <= 0'
@@ -99,7 +101,7 @@ class SVM_Optimizer(Optimizer):
         self._hyper_space = hp.uniform(C_KEY, self._C_begin, self._C_end)
 
     def _objective(self, args):
-        Optimizer._print_progress(self, 'svm')
+        Optimizer._log_progress(self, 'svm')
         C = args
 
         assert C > 0, 'C <= 0'
@@ -133,7 +135,7 @@ class DecisionTree_Optimizer(Optimizer):
         self._hyper_space = hp.choice(DEPTH_KEY, np.arange(self._depth_begin, self._depth_end + 1))
 
     def _objective(self, args):
-        Optimizer._print_progress(self, 'decision tree')
+        Optimizer._log_progress(self, 'decision tree')
         depth = args
 
         assert depth > 0, 'depth <= 0'
@@ -177,7 +179,7 @@ class ANN_Optimizer(Optimizer):
             hp.uniform(ALPHA_KEY, self._alpha_begin, self._alpha_end)]
 
     def _objective(self, args):
-        Optimizer._print_progress(self, 'ann')
+        Optimizer._log_progress(self, 'ann')
         hidden_neurons, solver, alpha = args
 
         assert hidden_neurons > 0 , 'hidden_neurons <= 0'
@@ -205,7 +207,7 @@ def determine_parameters_all(x_train, y_train, x_test, y_test):
     print "determine parameters"
     config = MethodsConfiguration()
 
-    print config.toDict()
+    logger().info(config.toDict())
 
     threads = list()
 
@@ -232,6 +234,9 @@ def determine_parameters_all(x_train, y_train, x_test, y_test):
 
     return config
 
+def determine_parameters(optimizer):
+    print 'determine parameters ', optimizer.__class__.__name__
+    optimizer.optimize()
 
 
 

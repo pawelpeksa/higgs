@@ -12,10 +12,13 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import svm
 
+from Configuration import logger
 from Configuration import Configuration as Config
 from Utils import Utils
 from HiggsModels import *
 from HiggsDataset import HiggsDataset
+
+from Optimizer import determine_parameters_all
 
 import matplotlib
 # Force matplotlib to not use any Xwindows backend.
@@ -30,13 +33,15 @@ def main():
 
     Config.configure_logger()
     
-    higgs_fracs = Config.HIGGS_FRACS	
+    higgs_fracs = Config.HIGGS_FRACS_TEST	
     
     for higgs_frac in higgs_fracs:
     	higgs_data = load_data(higgs_frac)
+	
 
-    	# methods_config =  determine_parameters_all(x_train, y_train, x_test, y_test)
-    	# methods_config.save('results/methodsConfig_' + str(higgs_frac) + '.dat')	
+    	methods_config =  determine_parameters_all(higgs_data.train.x, higgs_data.train.y, 
+			                           higgs_data.valid.x, higgs_data.valid.y)
+    	methods_config.save('results/methodsConfig_' + str(higgs_frac) + '.dat')	
 
         plt.figure()
 	
@@ -51,7 +56,7 @@ def main():
 
     tree = DecisionTreeClassifier(max_depth=10)
     forest = RandomForestClassifier(max_depth=5, n_estimators=5)
-    SVM = svm.SVC(kernel='linear', C=0.1)
+    SVM = svm.SVC(kernel='linear', C=0.1, probability=True)
     ann = MLPClassifier(solver='adam',
                             max_iter=300,
                             alpha=0.05,
@@ -253,10 +258,6 @@ def evaluate(model, dataset, batch_size=32):
     ys = np.concatenate(ys).ravel()       
 
     return roc_auc_score(ys, ps)
-
-
-def logger():
-    return logging.getLogger(Config.LOGGER_NAME)
 
 
 if __name__ == '__main__':

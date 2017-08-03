@@ -13,9 +13,13 @@ class Configuration:
     LOGGER_NAME = 'higgs_main_logger'
     LOG_DIR = './logs/'
     HIGGS_FRACS = [0.001, 0.005, 0.01, 0.05, 0.15, 0.25]
+    HIGGS_FRACS_TEST = [0.00001]
 
     REGENERATE_DATA = False
-
+	
+    HYPEROPT_EVALS_PER_SEARCH=10
+    ANN_OPIMIZER_MAX_ITERATIONS=10
+	
     ALL_DATA_FRACTION = 0.25 # how much data to use from entire higgs dataset (11M records)
     TEST_DATA_FRACTION = 0.25 # test data fraction out of entire dataset
     VALID_DATA_FRACTION = 0.25 # valid data fraction out of test dataset
@@ -61,4 +65,8 @@ class Configuration:
     @staticmethod
     def generate_logfile_name():
         return time.strftime('%d_%m_%Y_%H_%M_%S' + '.log')
+
+
+def logger():
+    return logging.getLogger(Configuration.LOGGER_NAME)
 
