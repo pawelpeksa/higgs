@@ -26,8 +26,9 @@ class Optimizer():
         self._iteration = 0
 
     def optimize(self):
-        result = fmin(fn=self._objective, space=self._hyper_space, algo=tpe.suggest,
-                    max_evals=Configuration.HYPEROPT_EVALS_PER_SEARCH)
+        logger().info('Start optimization for:' + self.__class__.__name__)
+        evals = Configuration.HYPEROPT_EVALS_PER_SEARCH
+        result = fmin(fn=self._objective, space=self._hyper_space, algo=tpe.suggest, max_evals=evals)
         return space_eval(self._hyper_space, result)
 
     def _objective(self, classifier):
