@@ -34,10 +34,17 @@ def main():
     print 'higgs 0.1'
 
     Config.configure_logger()
-    
+
+    Utils.maybe_create_directory('./results/') #  TODO: extract results dir to config constant
+
     higgs_fracs = Config.HIGGS_FRACS	
     
+    logger().info('Process all higgs data needed')
     for higgs_frac in higgs_fracs:
+        higgs_data = load_data(higgs_frac)
+
+    for higgs_frac in higgs_fracs:
+    	logger().info('workin on:' + str(higgs_frac) + ' data')
     	higgs_data = load_data(higgs_frac)
 	
 
