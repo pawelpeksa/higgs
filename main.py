@@ -29,14 +29,13 @@ import matplotlib.pyplot as plt
 
 sess = tf.Session()
 
-#TODO: adjust paremeters
 
 def main():
     print 'higgs 0.1'
 
     Config.configure_logger()
     
-    higgs_fracs = Config.HIGGS_FRACS_TEST	
+    higgs_fracs = Config.HIGGS_FRACS	
     
     for higgs_frac in higgs_fracs:
     	higgs_data = load_data(higgs_frac)
@@ -54,18 +53,20 @@ def main():
 
         plot_from_dict(results[Config.TREE_KEY], 'tree')
         plot_from_dict(results[Config.FOREST_KEY], 'forest')
-        plot_from_dict(results[Config.SVM_KEY], 'svm')
+        # plot_from_dict(results[Config.SVM_KEY], 'svm')
         plot_from_dict(results[Config.ANN_KEY], 'ann')
         plot_roc(ps, ys, 'dnn')
 
-        plt.savefig('results/' + 'roc_' + str(higgs_frac) + '.pdf')
+        file_name = 'results/' + 'roc_' + str(higgs_frac) + '.pdf'
+        logger().info('Saving plot at:' + file_name)
+        plt.savefig(file_name)
     
 
     logger().info('execution finished')
 
 
 def run_all_clfs(methods_config, higgs_data):
-    # TODO: pass parameters from methods config 
+    logger().info('Run all cfs')
     tree = DecisionTreeClassifier(max_depth=methods_config.decision_tree.max_depth)
     forest = RandomForestClassifier(max_depth=methods_config.random_forest.max_depth, 
                                     n_estimators=methods_config.random_forest.n_estimators)
@@ -87,7 +88,7 @@ def run_all_clfs(methods_config, higgs_data):
 
     threads.append(threading.Thread(target=run_clf, args=(tree, higgs_data, results[Config.TREE_KEY])))
     threads.append(threading.Thread(target=run_clf, args=(forest, higgs_data, results[Config.FOREST_KEY])))
-    threads.append(threading.Thread(target=run_clf, args=(SVM, higgs_data, results[Config.SVM_KEY])))
+    # threads.append(threading.Thread(target=run_clf, args=(SVM, higgs_data, results[Config.SVM_KEY])))
     threads.append(threading.Thread(target=run_clf, args=(ann, higgs_data, results[Config.ANN_KEY])))
 
     for thread in threads:
@@ -103,8 +104,6 @@ def run_clf(clf, higgs_data, result):
     logger().info('running clf:' + clf.__class__.__name__)
 
     clf.fit(higgs_data.train.x, higgs_data.train.y)
-
-    #TODO: save_model?
 
     prediction = clf.predict_proba(higgs_data.test.x)
 
@@ -139,12 +138,16 @@ def plot_roc(ps, ys, title):
     plt.legend(loc="lower right")
     
 
+reuse = None
 def run_higgs(higgs_data):
+    global reuse
+
     with sess.as_default():
-        with tf.variable_scope('model1', reuse=None):
+        with tf.variable_scope('model1', reuse=reuse):
+            reuse = True
             # model = HiggsLogisticRegression()
             # model = HiggsAdamBNDropoutNN(num_layers=6, size=500, keep_prob=0.9)
-            model = HiggsAdamBNDropoutNN(num_layers=1, size=500, keep_prob=0.9)
+            model = HiggsAdamBNDropoutNN(num_layers=2, size=500, keep_prob=0.9)
 
         init = tf.global_variables_initializer()   
 

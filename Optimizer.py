@@ -38,7 +38,7 @@ class Optimizer():
 
     def _log_progress(self, classifier_str):
         msg = classifier_str + ' optimizer progress:' + str((self._iteration / float(Configuration.HYPEROPT_EVALS_PER_SEARCH)) * 100) + '%'
-	logger().info(msg)
+        logger().info(msg)
 
     def _init_hyper_space(self):
         raise NotImplementedError('Should have implemented this')
@@ -205,10 +205,8 @@ class ANN_Optimizer(Optimizer):
 
 
 def determine_parameters_all(x_train, y_train, x_test, y_test):
-    print "determine parameters"
+    logger().info('determine parameters')
     config = MethodsConfiguration()
-
-    logger().info(config.toDict())
 
     threads = list()
 
@@ -217,7 +215,7 @@ def determine_parameters_all(x_train, y_train, x_test, y_test):
     tree_opt = DecisionTree_Optimizer(x_train, y_train, x_test, y_test)
     forest_opt = RandomForest_Optimizer(x_train, y_train, x_test, y_test)
 
-    threads.append(threading.Thread(target=determine_parameters, args=(svm_opt,)))
+    # threads.append(threading.Thread(target=determine_parameters, args=(svm_opt,)))
     threads.append(threading.Thread(target=determine_parameters, args=(ann_opt,)))
     threads.append(threading.Thread(target=determine_parameters, args=(tree_opt,)))
     threads.append(threading.Thread(target=determine_parameters, args=(forest_opt,)))
@@ -228,7 +226,7 @@ def determine_parameters_all(x_train, y_train, x_test, y_test):
     for thread in threads:
         thread.join()
 
-    config.svm = svm_opt.svm
+    # config.svm = svm_opt.svm
     config.ann = ann_opt.ann
     config.decision_tree = tree_opt.decision_tree
     config.random_forest = forest_opt.random_forest
@@ -236,7 +234,7 @@ def determine_parameters_all(x_train, y_train, x_test, y_test):
     return config
 
 def determine_parameters(optimizer):
-    print 'determine parameters ', optimizer.__class__.__name__
+    logger().info('determine parameters: ' + optimizer.__class__.__name__)
     optimizer.optimize()
 
 

@@ -7,19 +7,19 @@ class Configuration:
     def __init__(self):
         pass
 
-    # HIGGS_ALL = 'HIGGS.csv.gz'
-    HIGGS_ALL = 'HIGGS_10000.csv'
+    HIGGS_ALL = 'HIGGS.csv.gz'
+    # HIGGS_ALL = 'HIGGS_10000.csv'
     # HIGGS_ALL = 'sim.csv'
     DATA_DIR = './data/'
     LOGGER_NAME = 'higgs_main_logger'
     LOG_DIR = './logs/'
-    HIGGS_FRACS = [0.001, 0.005, 0.01, 0.05, 0.15, 0.25]
+    HIGGS_FRACS = [0.005, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
     HIGGS_FRACS_TEST = [0.99]
 
     REGENERATE_DATA = False
 	
-    HYPEROPT_EVALS_PER_SEARCH=10
-    ANN_OPIMIZER_MAX_ITERATIONS=10
+    HYPEROPT_EVALS_PER_SEARCH = 25
+    ANN_OPIMIZER_MAX_ITERATIONS = 50
 	
     ALL_DATA_FRACTION = 0.25 # how much data to use from entire higgs dataset (11M records)
     TEST_DATA_FRACTION = 0.25 # test data fraction out of entire dataset
