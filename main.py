@@ -39,30 +39,27 @@ def main():
 
     higgs_fracs = Config.HIGGS_FRACS	
     
-    logger().info('Process all higgs data needed')
+    # process_all_higgs_needed() # TODO: performance improvment possible
+    	
     for higgs_frac in higgs_fracs:
+        logger().info('workin on:' + str(higgs_frac) + ' data')
         higgs_data = load_data(higgs_frac)
-
-    for higgs_frac in higgs_fracs:
-    	logger().info('workin on:' + str(higgs_frac) + ' data')
-    	higgs_data = load_data(higgs_frac)
 	
 
-    	methods_config =  determine_parameters_all(higgs_data.train.x, higgs_data.train.y, 
+        methods_config =  determine_parameters_all(higgs_data.train.x, higgs_data.train.y, 
 			                           higgs_data.valid.x, higgs_data.valid.y)
 
-    	methods_config.save('results/methodsConfig_' + str(higgs_frac) + '.dat')	
+        methods_config.save('results/methodsConfig_' + str(higgs_frac) + '.dat')	
 
         plt.figure()
-	
+	#TODO: save ps,ys ? Or models?
         results = run_all_clfs(methods_config, higgs_data)
-        ps, ys = run_higgs(higgs_data)
 
         plot_from_dict(results[Config.TREE_KEY], 'tree')
         plot_from_dict(results[Config.FOREST_KEY], 'forest')
         # plot_from_dict(results[Config.SVM_KEY], 'svm')
         plot_from_dict(results[Config.ANN_KEY], 'ann')
-        plot_roc(ps, ys, 'dnn')
+        plot_from_dict(results[Config.DNN_KEY], 'dnn')
 
         file_name = 'results/' + 'roc_' + str(higgs_frac) + '.pdf'
         logger().info('Saving plot at:' + file_name)
@@ -85,6 +82,7 @@ def run_all_clfs(methods_config, higgs_data):
                             random_state=1,
                             learning_rate='adaptive')
 
+
     threads = list()
     results = dict()
 
@@ -92,19 +90,32 @@ def run_all_clfs(methods_config, higgs_data):
     results[Config.FOREST_KEY] = []
     results[Config.SVM_KEY] = []
     results[Config.ANN_KEY] = []
+    results[Config.DNN_KEY] = []
 
     threads.append(threading.Thread(target=run_clf, args=(tree, higgs_data, results[Config.TREE_KEY])))
     threads.append(threading.Thread(target=run_clf, args=(forest, higgs_data, results[Config.FOREST_KEY])))
     # threads.append(threading.Thread(target=run_clf, args=(SVM, higgs_data, results[Config.SVM_KEY])))
     threads.append(threading.Thread(target=run_clf, args=(ann, higgs_data, results[Config.ANN_KEY])))
+    # threads.append(threading.Thread(target=run_higgs, args=(higgs_data, init, results[Config.DNN_KEY])))
 
     for thread in threads:
         thread.start()
+
+    # run dnn on main thread
+    run_higgs(higgs_data, results[Config.DNN_KEY])
 
     for thread in threads:
         thread.join()
 
     return results    
+
+
+def process_all_higgs_needed():
+    logger().info('Process all higgs data needed')
+    higgs_fracs = Config.HIGGS_FRACS	
+    for higgs_frac in higgs_fracs:
+        logger().info('Loading ' + str(higgs_frac) + ' higgs')
+        higgs_data = load_data(higgs_frac)
 
 
 def run_clf(clf, higgs_data, result):
@@ -146,7 +157,7 @@ def plot_roc(ps, ys, title):
     
 
 reuse = None
-def run_higgs(higgs_data):
+def run_higgs(higgs_data, results):
     global reuse
 
     with sess.as_default():
@@ -157,7 +168,6 @@ def run_higgs(higgs_data):
             model = HiggsAdamBNDropoutNN(num_layers=2, size=500, keep_prob=0.9)
 
         init = tf.global_variables_initializer()   
-
         sess.run(init)
 
         logistic_acus = []
@@ -165,16 +175,19 @@ def run_higgs(higgs_data):
         for i in range(25):
             logger().info('EPOCH: %d' % (i + 1))
             train(model, higgs_data.train, 2 * 512)
-            ps, ys = evaluate(model, higgs_data.valid, 4)
+            ps, ys = evaluate(model, higgs_data.valid, 4) #TODO:adjust parameters:4
             valid_auc = roc_auc_score(ys, ps)
             logger().info(' VALID AUC: %.3f' % valid_auc)
             logistic_acus += [valid_auc]
 
-        return evaluate(model, higgs_data.valid, 4)
+        ps, ys = evaluate(model, higgs_data.valid, 4) #TODO: adjust parameters:4
+        results.append(ps)
+        results.append(ys)
             
 
 def load_np_data(path):
         return np.load(path)
+
 
 def higgs_data_tail(frac):
     return "_" + str(frac) + ".npy"
@@ -193,20 +206,23 @@ def load_data(data_frac):
     test_data = None
 
     regenerate_data = Config.REGENERATE_DATA
+
     logger().info('Regenerate data:' + str(regenerate_data)) 
+
+    all_data_f = data_frac # how much data to use 
+    test_data_f = Config.TEST_DATA_FRACTION # test data fraction out of entire dataset
+    valid_data_f = Config.VALID_DATA_FRACTION # valid data fraction out of test dataset
 
     if (not (Utils.file_exist(train_path) and Utils.file_exist(valid_path) and Utils.file_exist(test_path))) or regenerate_data:
 
         logger().info('preparing data')
-
-        all_data_f = data_frac # how much data to use 
-        test_data_f = Config.TEST_DATA_FRACTION # test data fraction out of entire dataset
-        valid_data_f = Config.VALID_DATA_FRACTION # valid data fraction out of test dataset
-
+    
         df = pd.read_csv(data_dir + Config.HIGGS_ALL, header=None)
         df = df.astype(np.float32)
 
         data_len = len(df)
+
+        logger().info("All data loaded: %d" % data_len)
 
         perm = np.random.permutation(data_len)
         all_data = df.values
@@ -214,9 +230,7 @@ def load_data(data_frac):
 
         data_len *= all_data_f
         data_len = int(data_len)
-        all_data = all_data[:data_len]
-
-        logger().info("Data len: %d" % data_len)
+        all_data = all_data[:data_len] 
 
         test_data_len = int(test_data_f * data_len)
 
@@ -241,12 +255,15 @@ def load_data(data_frac):
         train_data = load_np_data(train_path)
         valid_data = load_np_data(valid_path)
         test_data = load_np_data(test_path)
-
-    logger().info("Loading columns: %d:%d" % (Config.FEATURES_START_COL, Config.FEATURES_END_COL))
-
+	
     train_data, valid_data, test_data = load_columns(train_data, valid_data, test_data)
 
     assert train_data is not None and valid_data is not None and test_data is not None, 'data not loaded'
+	
+    loaded_data_len = len(train_data) + len(valid_data) + len(test_data)
+    logger().info("Data len: %d with factor: %f" % (loaded_data_len, all_data_f))
+    logger().info("All data should be: %d" % int(loaded_data_len/all_data_f))
+    logger().info("Loading columns: %d:%d" % (Config.FEATURES_START_COL, Config.FEATURES_END_COL))
 
     logger().info("Train data len: %d" % len(train_data))
     logger().info("Valid data len: %d" % len(valid_data))

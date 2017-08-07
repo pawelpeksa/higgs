@@ -14,7 +14,7 @@ class Configuration:
     LOGGER_NAME = 'higgs_main_logger'
     LOG_DIR = './logs/'
     HIGGS_FRACS = [0.005, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
-    HIGGS_FRACS_TEST = [0.99]
+    HIGGS_FRACS_TEST = [0.005]
 
     REGENERATE_DATA = False
 	
@@ -36,6 +36,7 @@ class Configuration:
     ANN_KEY = 'ann'
     FOREST_KEY = 'random_forest'
     TREE_KEY = 'decision_tree'
+    DNN_KEY = 'dnn'
 
     @staticmethod
     def configure_logger():
