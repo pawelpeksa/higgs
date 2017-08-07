@@ -1,6 +1,8 @@
 import logging
 import sys
 import threading
+import pickle
+import math
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -26,6 +28,7 @@ import matplotlib
 matplotlib.use('Agg') # has to be imported before pyplot
 import matplotlib.pyplot as plt
 
+#TODO: fix indentation in all files
 
 sess = tf.Session()
 
@@ -45,16 +48,17 @@ def main():
         logger().info('workin on:' + str(higgs_frac) + ' data')
         higgs_data = load_data(higgs_frac)
 	
-
+	# TODO: maybe can run higgs in this moment?
         methods_config =  determine_parameters_all(higgs_data.train.x, higgs_data.train.y, 
 			                           higgs_data.valid.x, higgs_data.valid.y)
 
         methods_config.save('results/methodsConfig_' + str(higgs_frac) + '.dat')	
 
-        plt.figure()
-	#TODO: save ps,ys ? Or models?
-        results = run_all_clfs(methods_config, higgs_data)
 
+        results = run_all_clfs(methods_config, higgs_data)
+	save_results(results, higgs_frac)
+
+        plt.figure()
         plot_from_dict(results[Config.TREE_KEY], 'tree')
         plot_from_dict(results[Config.FOREST_KEY], 'forest')
         # plot_from_dict(results[Config.SVM_KEY], 'svm')
@@ -68,6 +72,11 @@ def main():
 
     logger().info('execution finished')
 
+
+def save_results(results, higgs_frac):
+    with open('results/resultDict_' + str(higgs_frac) + '.dat','w') as f:
+        pickle.dump(results, f)
+        
 
 def run_all_clfs(methods_config, higgs_data):
     logger().info('Run all cfs')
@@ -96,7 +105,6 @@ def run_all_clfs(methods_config, higgs_data):
     threads.append(threading.Thread(target=run_clf, args=(forest, higgs_data, results[Config.FOREST_KEY])))
     # threads.append(threading.Thread(target=run_clf, args=(SVM, higgs_data, results[Config.SVM_KEY])))
     threads.append(threading.Thread(target=run_clf, args=(ann, higgs_data, results[Config.ANN_KEY])))
-    # threads.append(threading.Thread(target=run_higgs, args=(higgs_data, init, results[Config.DNN_KEY])))
 
     for thread in threads:
         thread.start()
@@ -171,16 +179,21 @@ def run_higgs(higgs_data, results):
         sess.run(init)
 
         logistic_acus = []
+	
+	data_batch_train = int(math.sqrt(len(higgs_data.train.x)))
+	data_batch_valid = int(math.sqrt(len(higgs_data.valid.x)))
+
+	logger().info('Data batch train:%d Data batch valid:%d', data_batch_train, data_batch_valid)
 
         for i in range(25):
             logger().info('EPOCH: %d' % (i + 1))
-            train(model, higgs_data.train, 2 * 512)
-            ps, ys = evaluate(model, higgs_data.valid, 4) #TODO:adjust parameters:4
+            train(model, higgs_data.train, data_batch_train)
+            ps, ys = evaluate(model, higgs_data.valid, data_batch_valid)
             valid_auc = roc_auc_score(ys, ps)
             logger().info(' VALID AUC: %.3f' % valid_auc)
             logistic_acus += [valid_auc]
 
-        ps, ys = evaluate(model, higgs_data.valid, 4) #TODO: adjust parameters:4
+        ps, ys = evaluate(model, higgs_data.valid, data_batch_valid)
         results.append(ps)
         results.append(ys)
             
