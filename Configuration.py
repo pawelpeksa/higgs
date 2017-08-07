@@ -13,6 +13,7 @@ class Configuration:
     DATA_DIR = './data/'
     LOGGER_NAME = 'higgs_main_logger'
     LOG_DIR = './logs/'
+    RESULTS_DIR = './results2/'
     HIGGS_FRACS = [0.005, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
     HIGGS_FRACS_TEST = [0.005]
 
@@ -28,8 +29,8 @@ class Configuration:
     # which columns should be taken to process
     # from 0 to last column, higgs data has 28 features so columns 1:27
     # higgs dataset : 0 column - label, 1-21 coulmns - 21 low level features, 22-28 columns - 7 high level features
-    FEATURES_START_COL = 1 #  including
-    FEATURES_END_COL = 21 #  including 
+    FEATURES_START_COL = 22 #  including
+    FEATURES_END_COL = 28 #  including 
 
     #  KEYS
     SVM_KEY = 'svm'

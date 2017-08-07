@@ -38,7 +38,7 @@ def main():
 
     Config.configure_logger()
 
-    Utils.maybe_create_directory('./results/') #  TODO: extract results dir to config constant
+    Utils.maybe_create_directory(Config.RESULTS_DIR)
 
     higgs_fracs = Config.HIGGS_FRACS	
     
@@ -48,15 +48,15 @@ def main():
         logger().info('workin on:' + str(higgs_frac) + ' data')
         higgs_data = load_data(higgs_frac)
 	
-	# TODO: maybe can run higgs in this moment?
+        # TODO: maybe can run higgs in this moment?
         methods_config =  determine_parameters_all(higgs_data.train.x, higgs_data.train.y, 
 			                           higgs_data.valid.x, higgs_data.valid.y)
 
-        methods_config.save('results/methodsConfig_' + str(higgs_frac) + '.dat')	
+        methods_config.save(Config.RESULTS_DIR + 'methodsConfig_' + str(higgs_frac) + '.dat')	
 
 
         results = run_all_clfs(methods_config, higgs_data)
-	save_results(results, higgs_frac)
+        save_results(results, higgs_frac)
 
         plt.figure()
         plot_from_dict(results[Config.TREE_KEY], 'tree')
@@ -65,7 +65,7 @@ def main():
         plot_from_dict(results[Config.ANN_KEY], 'ann')
         plot_from_dict(results[Config.DNN_KEY], 'dnn')
 
-        file_name = 'results/' + 'roc_' + str(higgs_frac) + '.pdf'
+        file_name = Config.RESULTS_DIR + 'roc_' + str(higgs_frac) + '.pdf'
         logger().info('Saving plot at:' + file_name)
         plt.savefig(file_name)
     
@@ -74,7 +74,7 @@ def main():
 
 
 def save_results(results, higgs_frac):
-    with open('results/resultDict_' + str(higgs_frac) + '.dat','w') as f:
+    with open(Config.RESULTS_DIR + 'resultDict_' + str(higgs_frac) + '.dat','w') as f:
         pickle.dump(results, f)
         
 
