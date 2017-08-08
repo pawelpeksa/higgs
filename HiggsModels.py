@@ -1,7 +1,10 @@
 import tensorflow as tf
 from Configuration import Configuration as Config
 
-parameters_n = Config.FEATURES_END_COL - Config.FEATURES_START_COL + 1
+
+def parameters_n():
+    return Config.FEATURES_END_COL - Config.FEATURES_START_COL + 1
+
 
 def linear(x, name, size, bias=True):
     w = tf.get_variable(name + '/W', [x.get_shape()[1], size]) 
@@ -70,8 +73,9 @@ class HiggsAdamBNNeuralNetwork(object):
 
 
 class HiggsAdamBNDropoutNN(object):
+
     def __init__(self, num_layers=1, size=100, lr=0.1, keep_prob=1.0):
-        self.x = x = tf.placeholder(tf.float32, [None, parameters_n])
+        self.x = x = tf.placeholder(tf.float32, [None, parameters_n()])
         self.y = tf.placeholder(tf.float32, [None])
 
         for i in range(num_layers):
@@ -83,4 +87,5 @@ class HiggsAdamBNDropoutNN(object):
         self.p = tf.nn.sigmoid(x)
         self.loss = loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=tf.reshape(self.y, [-1, 1])))
         self.train_op = tf.train.AdamOptimizer(lr).minimize(loss)                
+
 

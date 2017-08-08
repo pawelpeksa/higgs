@@ -204,7 +204,7 @@ def run_higgs(higgs_data, results):
 
 	logger().info('Data batch train:%d Data batch valid:%d', data_batch_train, data_batch_valid)
 
-        for i in range(25):
+        for i in range(50):
             logger().info('EPOCH: %d' % (i + 1))
             train(model, higgs_data.train, data_batch_train)
             ps, ys = evaluate(model, higgs_data.valid, data_batch_valid)
