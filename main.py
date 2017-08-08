@@ -17,6 +17,7 @@ from sklearn import svm
 
 from Configuration import logger
 from Configuration import Configuration as Config
+from MethodsConfiguration import MethodsConfiguration
 from Utils import Utils
 from HiggsModels import *
 from HiggsDataset import HiggsDataset
@@ -38,6 +39,24 @@ def main():
 
     Config.configure_logger()
 
+    #TOOD: extract to function
+    if sys.argv[1] == 'high':
+        logger().info('Using high level features')
+        Config.RESULTS_DIR = './results_high/'
+
+        Config.FEATURES_START_COL = 22 #  including
+        Config.FEATURES_END_COL = 28 #  including 
+    elif sys.argv[1] == 'low':
+        logger().info('Using low level features')
+        Config.RESULTS_DIR = './results_low/'
+
+        Config.FEATURES_START_COL = 1 #  including
+        Config.FEATURES_END_COL = 21 #  including 
+    else:
+        assert True, 'command line argument not specified'
+
+    logger().info('Results directory set to ' + Config.RESULTS_DIR)
+    
     Utils.maybe_create_directory(Config.RESULTS_DIR)
 
     higgs_fracs = Config.HIGGS_FRACS	
@@ -48,7 +67,7 @@ def main():
         logger().info('workin on:' + str(higgs_frac) + ' data')
         higgs_data = load_data(higgs_frac)
 	
-        # TODO: maybe can run higgs in this moment?
+        # TODO: maybe can run higgs here?
         methods_config =  determine_parameters_all(higgs_data.train.x, higgs_data.train.y, 
 			                           higgs_data.valid.x, higgs_data.valid.y)
 
@@ -87,7 +106,7 @@ def run_all_clfs(methods_config, higgs_data):
     ann = MLPClassifier(solver=methods_config.ann.solver,
                             max_iter=Config.ANN_OPIMIZER_MAX_ITERATIONS,
                             alpha=methods_config.ann.alpha,
-                            hidden_layer_sizes=(methods_config.ann.hidden_neurons,),
+                            hidden_layer_sizes=(MethodsConfiguration.calc_hidden_neurons(),),
                             random_state=1,
                             learning_rate='adaptive')
 

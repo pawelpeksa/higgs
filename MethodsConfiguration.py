@@ -1,4 +1,7 @@
 import json
+import math
+
+from Configuration import Configuration as Config
 
 class MethodsConfiguration:
     def __init__(self):
@@ -19,6 +22,12 @@ class MethodsConfiguration:
     def save(self, filepath):
 	 with open(filepath, 'w') as output:
 		 json.dump(self.toDict(), output) 
+
+    @staticmethod
+    def calc_hidden_neurons():
+        # hidden neurons = mean of number of ins and outs - https://stats.stackexchange.com/questions/181/how-to-choose-the-number-of-hidden-layers-and-nodes-in-a-feedforward-neural-netw
+        return math.ceil(((Config.FEATURES_END_COL - Config.FEATURES_START_COL + 1) + 1)/2.0)
+         
 
 
 #TODO: change namges of the class below to have suffix Config
