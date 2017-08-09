@@ -39,21 +39,7 @@ def main():
 
     Config.configure_logger()
 
-    #TOOD: extract to function
-    if sys.argv[1] == 'high':
-        logger().info('Using high level features')
-        Config.RESULTS_DIR = './results_high/'
-
-        Config.FEATURES_START_COL = 22 #  including
-        Config.FEATURES_END_COL = 28 #  including 
-    elif sys.argv[1] == 'low':
-        logger().info('Using low level features')
-        Config.RESULTS_DIR = './results_low/'
-
-        Config.FEATURES_START_COL = 1 #  including
-        Config.FEATURES_END_COL = 21 #  including 
-    else:
-        assert True, 'command line argument not specified'
+    read_arguments()
 
     logger().info('Results directory set to ' + Config.RESULTS_DIR)
     
@@ -90,6 +76,23 @@ def main():
     
 
     logger().info('execution finished')
+
+
+def read_arguments():
+    if sys.argv[1] == 'high':
+        logger().info('Using high level features')
+        Config.RESULTS_DIR = './results_high/'
+
+        Config.FEATURES_START_COL = 22 #  including
+        Config.FEATURES_END_COL = 28 #  including 
+    elif sys.argv[1] == 'low':
+        logger().info('Using low level features')
+        Config.RESULTS_DIR = './results_low/'
+
+        Config.FEATURES_START_COL = 1 #  including
+        Config.FEATURES_END_COL = 21 #  including 
+    else:
+        assert True, 'command line argument not specified'
 
 
 def save_results(results, higgs_frac):
