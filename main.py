@@ -31,8 +31,6 @@ import matplotlib.pyplot as plt
 
 #TODO: fix indentation in all files
 
-sess = tf.Session()
-
 
 def main():
     print 'higgs 0.1'
@@ -53,7 +51,12 @@ def main():
         logger().info('workin on:' + str(higgs_frac) + ' data')
         higgs_data = load_data(higgs_frac)
 	
-        # TODO: maybe can run higgs here?
+        higgs_result = dict()
+        higgs_result[Config.DNN_KEY] = []
+        
+        higgs_thread = threading.Thread(target=run_higgs, args=(higgs_data, higgs_result[Config.DNN_KEY]))
+        higgs_thread.start()
+
         methods_config =  determine_parameters_all(higgs_data.train.x, higgs_data.train.y, 
 			                           higgs_data.valid.x, higgs_data.valid.y)
 
@@ -61,6 +64,10 @@ def main():
 
 
         results = run_all_clfs(methods_config, higgs_data)
+        higgs_thread.join()
+
+        results[Config.DNN_KEY] = higgs_result[Config.DNN_KEY]
+
         save_results(results, higgs_frac)
 
         plt.figure()
@@ -91,8 +98,6 @@ def read_arguments():
 
         Config.FEATURES_START_COL = 1 #  including
         Config.FEATURES_END_COL = 21 #  including 
-    else:
-        assert True, 'command line argument not specified'
 
 
 def save_results(results, higgs_frac):
@@ -130,9 +135,6 @@ def run_all_clfs(methods_config, higgs_data):
 
     for thread in threads:
         thread.start()
-
-    # run dnn on main thread
-    run_higgs(higgs_data, results[Config.DNN_KEY])
 
     for thread in threads:
         thread.join()
@@ -190,12 +192,14 @@ reuse = None
 def run_higgs(higgs_data, results):
     global reuse
 
+    sess = tf.Session()
+
     with sess.as_default():
         with tf.variable_scope('model1', reuse=reuse):
             reuse = True
             # model = HiggsLogisticRegression()
             # model = HiggsAdamBNDropoutNN(num_layers=6, size=500, keep_prob=0.9)
-            model = HiggsAdamBNDropoutNN(num_layers=2, size=500, keep_prob=0.9)
+            model = HiggsAdamBNDropoutNN(num_layers=3, size=500, keep_prob=0.9)
 
         init = tf.global_variables_initializer()   
         sess.run(init)
@@ -209,13 +213,13 @@ def run_higgs(higgs_data, results):
 
         for i in range(50):
             logger().info('EPOCH: %d' % (i + 1))
-            train(model, higgs_data.train, data_batch_train)
-            ps, ys = evaluate(model, higgs_data.valid, data_batch_valid)
-            valid_auc = roc_auc_score(ys, ps)
-            logger().info(' VALID AUC: %.3f' % valid_auc)
-            logistic_acus += [valid_auc]
+            train(sess, model, higgs_data.train, data_batch_train)
+            # ps, ys = evaluate(sess, model, higgs_data.valid, data_batch_valid)
+            # valid_auc = roc_auc_score(ys, ps)
+            # logger().info(' VALID AUC: %.3f' % valid_auc)
+            # logistic_acus += [valid_auc]
 
-        ps, ys = evaluate(model, higgs_data.valid, data_batch_valid)
+        ps, ys = evaluate(sess, model, higgs_data.valid, data_batch_valid)
         results.append(ps)
         results.append(ys)
             
@@ -321,7 +325,7 @@ def load_columns(train_data, valid_data, test_data):
     return train_data, valid_data, test_data
 
 
-def train(model, dataset, batch_size = 16):
+def train(sess, model, dataset, batch_size = 16):
     epoch_size = dataset.n / batch_size
     losses = []
 
@@ -335,7 +339,7 @@ def train(model, dataset, batch_size = 16):
 
     return np.mean(losses)        
 
-def evaluate(model, dataset, batch_size=32):
+def evaluate(sess, model, dataset, batch_size=32):
     dataset.shuffle()
 
     ps = []
