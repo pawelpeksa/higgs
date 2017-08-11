@@ -57,19 +57,20 @@ def main():
         higgs_thread = threading.Thread(target=run_higgs, args=(higgs_data, higgs_result[Config.DNN_KEY]))
         higgs_thread.start()
 
-        methods_config =  determine_parameters_all(higgs_data.train.x, higgs_data.train.y, 
-			                           higgs_data.valid.x, higgs_data.valid.y)
+        # methods_config =  determine_parameters_all(higgs_data.train.x, higgs_data.train.y, 
+			     #                       higgs_data.valid.x, higgs_data.valid.y)
 
-        methods_config.save(Config.RESULTS_DIR + 'methodsConfig_' + str(higgs_frac) + '.dat')	
+        # methods_config.save(Config.RESULTS_DIR + 'methodsConfig_' + str(higgs_frac) + '.dat')	
 
 
-        results = run_all_clfs(methods_config, higgs_data)
+        # results = run_all_clfs(methods_config, higgs_data)
+
         higgs_thread.join()
 
-        results[Config.DNN_KEY] = higgs_result[Config.DNN_KEY]
+        # results[Config.DNN_KEY] = higgs_result[Config.DNN_KEY]
 
         save_results(results, higgs_frac)
-
+        exit()
         plt.figure()
         plot_from_dict(results[Config.TREE_KEY], 'tree')
         plot_from_dict(results[Config.FOREST_KEY], 'forest')
@@ -211,13 +212,15 @@ def run_higgs(higgs_data, results):
 
 	logger().info('Data batch train:%d Data batch valid:%d', data_batch_train, data_batch_valid)
 
-        for i in range(50):
+        for i in range(300):
             logger().info('EPOCH: %d' % (i + 1))
             train(sess, model, higgs_data.train, data_batch_train)
-            # ps, ys = evaluate(sess, model, higgs_data.valid, data_batch_valid)
-            # valid_auc = roc_auc_score(ys, ps)
-            # logger().info(' VALID AUC: %.3f' % valid_auc)
-            # logistic_acus += [valid_auc]
+	    if i % 10 == 0:
+
+                ps, ys = evaluate(sess, model, higgs_data.valid, data_batch_valid)
+                valid_auc = roc_auc_score(ys, ps)
+                logger().info(' VALIDD AUC: %.3f' % valid_auc)
+                logistic_acus += [valid_auc]
 
         ps, ys = evaluate(sess, model, higgs_data.valid, data_batch_valid)
         results.append(ps)

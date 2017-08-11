@@ -1,5 +1,3 @@
-python main.py high &
-sleep 3 # so as not to overwrite log
-python main.py low &
-wait
+python main.py low
+
 shutdown now
