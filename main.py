@@ -189,15 +189,12 @@ def plot_roc(ps, ys, title):
     plt.legend(loc="lower right")
     
 
-reuse = None
 def run_higgs(higgs_data, results):
-    global reuse
-
     sess = tf.Session()
 
     with sess.as_default():
-        with tf.variable_scope('model1', reuse=reuse):
-            reuse = True
+        with tf.variable_scope('model1', reuse=None):
+            # reuse = True
             # model = HiggsLogisticRegression()
             # model = HiggsAdamBNDropoutNN(num_layers=6, size=500, keep_prob=0.9)
             model = HiggsAdamBNDropoutNN(num_layers=6, size=500, keep_prob=0.9)
