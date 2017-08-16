@@ -22,7 +22,8 @@ class Configuration:
 	
     HYPEROPT_EVALS_PER_SEARCH = 25
     ANN_OPIMIZER_MAX_ITERATIONS = 50
-	
+    DNN_EPOCHS = 30
+
     ALL_DATA_FRACTION = 0.25 # how much data to use from entire higgs dataset (11M records)
     TEST_DATA_FRACTION = 0.25 # test data fraction out of entire dataset
     VALID_DATA_FRACTION = 0.25 # valid data fraction out of test dataset

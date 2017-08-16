@@ -209,7 +209,7 @@ def run_higgs(higgs_data, results):
 
 	logger().info('Data batch train:%d Data batch valid:%d', data_batch_train, data_batch_valid)
 
-        for i in range(30):
+        for i in range(Config.DNN_EPOCHS):
             logger().info('EPOCH: %d' % (i + 1))
             train(sess, model, higgs_data.train, data_batch_train)
 	    if ((i+1) % 5) == 0:
