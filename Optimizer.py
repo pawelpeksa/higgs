@@ -221,8 +221,8 @@ def determine_parameters_all(x_train, y_train, x_test, y_test):
     config.ann = ann_opt.ann
     config.decision_tree = tree_opt.decision_tree
      
-    forest_params.max_depth = 5
-    forest_params.n_estimators = 200
+    config.random_forest.max_depth = 5
+    config.random_forest.n_estimators = 200
 
     return config
 
