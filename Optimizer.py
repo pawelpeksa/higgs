@@ -50,7 +50,7 @@ ESTIMATORS_KEY = 'estimators'
 class RandomForest_Optimizer(Optimizer):
     def __init__(self, x_train, y_train, x_test, y_test, n_folds=10,
                  depth_begin=1, depth_end=15,
-                 estimators_begin=2, estimators_end=1501):
+                 estimators_begin=5, estimators_end=50):
         Optimizer.__init__(self, x_train, y_train, x_test, y_test, n_folds)
 
         self._depth_begin = depth_begin
@@ -64,7 +64,7 @@ class RandomForest_Optimizer(Optimizer):
 
     def _init_hyper_space(self):
         self._hyper_space = [hp.choice(DEPTH_KEY, np.arange(self._depth_begin, self._depth_end + 1)),
-                             hp.choice(ESTIMATORS_KEY, np.arange(self._depth_begin, self._depth_end + 1, 100))]
+                             hp.choice(ESTIMATORS_KEY, np.arange(self._estimators_begin, self._estimators_end + 1, 10))]
 
     def _objective(self, args):
         Optimizer._log_progress(self, 'random forest')
@@ -209,7 +209,7 @@ def determine_parameters_all(x_train, y_train, x_test, y_test):
     # threads.append(threading.Thread(target=determine_parameters, args=(svm_opt,)))
     threads.append(threading.Thread(target=determine_parameters, args=(ann_opt,)))
     threads.append(threading.Thread(target=determine_parameters, args=(tree_opt,)))
-    threads.append(threading.Thread(target=determine_parameters, args=(forest_opt,)))
+# threads.append(threading.Thread(target=determine_parameters, args=(forest_opt,)))
 
     for thread in threads:
         thread.start()
@@ -220,7 +220,9 @@ def determine_parameters_all(x_train, y_train, x_test, y_test):
     # config.svm = svm_opt.svm
     config.ann = ann_opt.ann
     config.decision_tree = tree_opt.decision_tree
-    config.random_forest = forest_opt.random_forest
+     
+    forest_params.max_depth = 5
+    forest_params.n_estimators = 200
 
     return config
 
