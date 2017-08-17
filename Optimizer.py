@@ -50,7 +50,7 @@ ESTIMATORS_KEY = 'estimators'
 class RandomForest_Optimizer(Optimizer):
     def __init__(self, x_train, y_train, x_test, y_test, n_folds=10,
                  depth_begin=1, depth_end=15,
-                 estimators_begin=2, estimators_end=15):
+                 estimators_begin=2, estimators_end=1501):
         Optimizer.__init__(self, x_train, y_train, x_test, y_test, n_folds)
 
         self._depth_begin = depth_begin
@@ -64,7 +64,7 @@ class RandomForest_Optimizer(Optimizer):
 
     def _init_hyper_space(self):
         self._hyper_space = [hp.choice(DEPTH_KEY, np.arange(self._depth_begin, self._depth_end + 1)),
-                             hp.choice(ESTIMATORS_KEY, np.arange(self._depth_begin, self._depth_end + 1))]
+                             hp.choice(ESTIMATORS_KEY, np.arange(self._depth_begin, self._depth_end + 1, 100))]
 
     def _objective(self, args):
         Optimizer._log_progress(self, 'random forest')

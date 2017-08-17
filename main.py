@@ -46,7 +46,7 @@ def main():
     higgs_fracs = Config.HIGGS_FRACS	
     
     # process_all_higgs_needed() # TODO: performance improvment possible
-    	
+
     for higgs_frac in higgs_fracs:
         logger().info('workin on:' + str(higgs_frac) + ' data')
         higgs_data = load_data(higgs_frac)
