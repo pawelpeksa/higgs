@@ -69,8 +69,69 @@ def main():
     fig.tight_layout()
 
     plt.savefig(plot_dir + 'all.pdf')
+    plt.clf()
 
-    logger().info('plotting finished finished')
+    logger().info('plotting seperately finished')
+
+    auc_dict_high = dict()
+    auc_dict_low = dict()
+
+    create_arrays(auc_dict_high)
+    create_arrays(auc_dict_low)
+
+    fig = plt.figure(figsize=(8, 6))
+
+    for higgs_frac in higgs_fracs:
+        logger().info('Plotting into summary for frac:%f', higgs_frac)
+
+        results_high = open_results('./results_high/resultDict_' + str(higgs_frac) + '.dat')
+        results_low = open_results('./results_low/resultDict_' + str(higgs_frac) + '.dat')  
+
+        auc_dict_high[Config.TREE_KEY].append(auc_roc(results_high[Config.TREE_KEY]))
+        auc_dict_high[Config.FOREST_KEY].append(auc_roc(results_high[Config.FOREST_KEY]))
+        auc_dict_high[Config.ANN_KEY].append(auc_roc(results_high[Config.ANN_KEY]))
+        auc_dict_high[Config.DNN_KEY].append(auc_roc(results_high[Config.DNN_KEY]))
+
+        auc_dict_low[Config.TREE_KEY].append(auc_roc(results_low[Config.TREE_KEY]))
+        auc_dict_low[Config.FOREST_KEY].append(auc_roc(results_low[Config.FOREST_KEY]))
+        auc_dict_low[Config.ANN_KEY].append(auc_roc(results_low[Config.ANN_KEY]))
+        auc_dict_low[Config.DNN_KEY].append(auc_roc(results_low[Config.DNN_KEY]))
+
+    plot_all_summary(auc_dict_low, auc_dict_high, higgs_fracs)
+    plt.savefig(plot_dir + 'summary.pdf')
+
+
+def plot_all_summary(auc_dict_low, auc_dict_high, fracs):  
+    plt.xlabel('Data frac')
+    plt.ylabel('AUC ROC')
+
+    lw = 1
+    
+    plt.plot(fracs, auc_dict_low[Config.TREE_KEY], lw=lw, label=Config.TREE_KEY + ' LL')   
+    plt.plot(fracs, auc_dict_low[Config.FOREST_KEY], lw=lw, label=Config.FOREST_KEY + ' LL')   
+    plt.plot(fracs, auc_dict_low[Config.ANN_KEY], lw=lw, label=Config.ANN_KEY + ' LL')   
+    plt.plot(fracs, auc_dict_low[Config.DNN_KEY], lw=lw, label=Config.DNN_KEY + ' LL')   
+
+    linestyle = '--'
+
+    plt.plot(fracs, auc_dict_high[Config.TREE_KEY], lw=lw, linestyle=linestyle, label=Config.TREE_KEY + ' HL')   
+    plt.plot(fracs, auc_dict_high[Config.FOREST_KEY], lw=lw, linestyle=linestyle, label=Config.FOREST_KEY + ' HL')   
+    plt.plot(fracs, auc_dict_high[Config.ANN_KEY], lw=lw, linestyle=linestyle, label=Config.ANN_KEY + ' HL')   
+    plt.plot(fracs, auc_dict_high[Config.DNN_KEY], lw=lw, linestyle=linestyle, label=Config.DNN_KEY + ' HL')   
+
+    plt.legend(loc="lower right", ncol=2)
+
+def auc_roc(psys):
+    ps, ys = psys
+    fpr, tpr, _ = roc_curve(ys, ps)
+    return auc(fpr, tpr)
+
+
+def create_arrays(dict):
+    dict[Config.TREE_KEY] = list()
+    dict[Config.FOREST_KEY] = list()
+    dict[Config.ANN_KEY] = list()
+    dict[Config.DNN_KEY] = list()
 
 
 def open_results(path):
