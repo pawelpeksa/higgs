@@ -112,17 +112,17 @@ def plot_all_summary(auc_dict_low, auc_dict_high, fracs):
 
     lw = 1
     
-    plt.plot(fracs, auc_dict_low[Config.TREE_KEY], lw=lw, label=Config.TREE_KEY + ' LL')   
-    plt.plot(fracs, auc_dict_low[Config.FOREST_KEY], lw=lw, label=Config.FOREST_KEY + ' LL')   
-    plt.plot(fracs, auc_dict_low[Config.ANN_KEY], lw=lw, label=Config.ANN_KEY + ' LL')   
-    plt.plot(fracs, auc_dict_low[Config.DNN_KEY], lw=lw, label=Config.DNN_KEY + ' LL')   
+    plt.plot(fracs, auc_dict_low[Config.TREE_KEY], lw=lw, color='b', label=Config.TREE_KEY + ' LL')   
+    plt.plot(fracs, auc_dict_low[Config.FOREST_KEY], lw=lw, color='g', label=Config.FOREST_KEY + ' LL')   
+    plt.plot(fracs, auc_dict_low[Config.ANN_KEY], lw=lw, color='c', label=Config.ANN_KEY + ' LL')   
+    plt.plot(fracs, auc_dict_low[Config.DNN_KEY], lw=lw, color='r', label=Config.DNN_KEY + ' LL')   
 
     linestyle = '--'
 
-    plt.plot(fracs, auc_dict_high[Config.TREE_KEY], lw=lw, linestyle=linestyle, label=Config.TREE_KEY + ' HL')   
-    plt.plot(fracs, auc_dict_high[Config.FOREST_KEY], lw=lw, linestyle=linestyle, label=Config.FOREST_KEY + ' HL')   
-    plt.plot(fracs, auc_dict_high[Config.ANN_KEY], lw=lw, linestyle=linestyle, label=Config.ANN_KEY + ' HL')   
-    plt.plot(fracs, auc_dict_high[Config.DNN_KEY], lw=lw, linestyle=linestyle, label=Config.DNN_KEY + ' HL')   
+    plt.plot(fracs, auc_dict_high[Config.TREE_KEY], lw=lw, linestyle=linestyle, color='b', label=Config.TREE_KEY + ' HL')   
+    plt.plot(fracs, auc_dict_high[Config.FOREST_KEY], lw=lw, linestyle=linestyle, color='g', label=Config.FOREST_KEY + ' HL')   
+    plt.plot(fracs, auc_dict_high[Config.ANN_KEY], lw=lw, linestyle=linestyle, color='c', label=Config.ANN_KEY + ' HL')   
+    plt.plot(fracs, auc_dict_high[Config.DNN_KEY], lw=lw, linestyle=linestyle, color='r', label=Config.DNN_KEY + ' HL')   
 
     plt.legend(loc="lower right", ncol=2)
 
