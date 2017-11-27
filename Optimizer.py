@@ -36,15 +36,8 @@ class Optimizer():
     def _objective(self, classifier):
         self._iteration += 1
 
-        x = np.concatenate((self._x_test, self._x_train), axis=0)
-        y = np.concatenate((self._y_test, self._y_train), axis=0)
-    
-        shuffle(x, y, random_state=Utils.get_seed())
-
-        score_arr = cross_val_score(classifier, x, y, cv=self._n_folds, n_jobs=-1)
-        score = np.mean(score_arr)
-
-        return -score
+ 	classifier.fit(self._x_train, self._y_train)
+	return -classifier.score(self._x_test, self._y_test)
 
     def _log_progress(self, classifier_str):
         msg = classifier_str + ' optimizer progress:' + str((self._iteration / float(Configuration.HYPEROPT_EVALS_PER_SEARCH)) * 100) + '%'
