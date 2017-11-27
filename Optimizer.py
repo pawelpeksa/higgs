@@ -154,33 +154,41 @@ class DecisionTree_Optimizer(Optimizer):
 
 SOLVER_KEY = 'solver'
 ALPHA_KEY = 'alpha'
+HIDDEN_NEURONS_KEY = 'hid_neurons'
 
 class ANN_Optimizer(Optimizer):
     def __init__(self, x_train, y_train, x_test, y_test, n_folds=10,
-                 alpha_begin=1, alpha_end=10):
+                 alpha_begin=0.0001, alpha_end=5,
+		 hid_neurons_begin=7, hid_neurons_end=30):
+
         Optimizer.__init__(self, x_train, y_train, x_test, y_test, n_folds)
 
         self._alpha_begin = alpha_begin
         self._alpha_end = alpha_end
+	
+	self._hid_neurons_begin = hid_neurons_begin
+	self._hid_neurons_end = hid_neurons_end
 
         self.ann = ANN()
 
-        self._solvers = ['lbfgs', 'sgd', 'adam']
+        self._solvers = ['adam']
+
         self._init_hyper_space()
 
     def _init_hyper_space(self):
         self._hyper_space = [
+	    hp.choice(HIDDEN_NEURONS_KEY, np.arange(self._hid_neurons_begin, self._hid_neurons_end + 1, 1)),
             hp.choice(SOLVER_KEY, self._solvers),
             hp.uniform(ALPHA_KEY, self._alpha_begin, self._alpha_end)]
 
     def _objective(self, args):
         Optimizer._log_progress(self, 'ann')
-        solver, alpha = args
+	hidden_neurons, solver, alpha = args
 
         ann = MLPClassifier(solver=solver,
                             max_iter=Configuration.ANN_OPIMIZER_MAX_ITERATIONS,
                             alpha=alpha,
-                            hidden_layer_sizes=(MethodsConfiguration.calc_hidden_neurons(),),
+                            hidden_layer_sizes=(hidden_neurons,),
                             random_state=1,
                             learning_rate='adaptive')
 
@@ -190,9 +198,10 @@ class ANN_Optimizer(Optimizer):
 
     def optimize(self):
         result = Optimizer.optimize(self)
-
-        self.ann.solver = result[0]
-        self.ann.alpha = result[1]
+	
+	self.ann.hidden_neurons = result[0]
+        self.ann.solver = result[1]
+        self.ann.alpha = result[2]
 
 
 def determine_parameters_all(x_train, y_train, x_test, y_test):
@@ -209,7 +218,7 @@ def determine_parameters_all(x_train, y_train, x_test, y_test):
     # threads.append(threading.Thread(target=determine_parameters, args=(svm_opt,)))
     threads.append(threading.Thread(target=determine_parameters, args=(ann_opt,)))
     threads.append(threading.Thread(target=determine_parameters, args=(tree_opt,)))
-# threads.append(threading.Thread(target=determine_parameters, args=(forest_opt,)))
+    threads.append(threading.Thread(target=determine_parameters, args=(forest_opt,)))
 
     for thread in threads:
         thread.start()
@@ -220,9 +229,7 @@ def determine_parameters_all(x_train, y_train, x_test, y_test):
     # config.svm = svm_opt.svm
     config.ann = ann_opt.ann
     config.decision_tree = tree_opt.decision_tree
-     
-    config.random_forest.max_depth = 5
-    config.random_forest.n_estimators = 200
+    config.random_forest = forest_opt.random_forest
 
     return config
 

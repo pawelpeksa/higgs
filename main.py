@@ -108,6 +108,7 @@ def save_results(results, higgs_frac):
 
 def run_all_clfs(methods_config, higgs_data):
     logger().info('Run all cfs')
+
     tree = DecisionTreeClassifier(max_depth=methods_config.decision_tree.max_depth)
     forest = RandomForestClassifier(max_depth=methods_config.random_forest.max_depth, 
                                     n_estimators=methods_config.random_forest.n_estimators)

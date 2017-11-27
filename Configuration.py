@@ -21,9 +21,9 @@ class Configuration:
 
     REGENERATE_DATA = False
 	
-    HYPEROPT_EVALS_PER_SEARCH = 25
-    ANN_OPIMIZER_MAX_ITERATIONS = 50
-    DNN_EPOCHS = 30
+    HYPEROPT_EVALS_PER_SEARCH = 20
+    ANN_OPIMIZER_MAX_ITERATIONS = 100
+    DNN_EPOCHS = 40
 
     ALL_DATA_FRACTION = 0.25 # how much data to use from entire higgs dataset (11M records)
     TEST_DATA_FRACTION = 0.25 # test data fraction out of entire dataset
