@@ -162,7 +162,7 @@ HIDDEN_NEURONS_KEY = 'hid_neurons'
 class ANN_Optimizer(Optimizer):
     def __init__(self, x_train, y_train, x_test, y_test, n_folds=10,
                  alpha_begin=0.0001, alpha_end=5,
-		 hid_neurons_begin=7, hid_neurons_end=30):
+		 hid_neurons_begin=10, hid_neurons_end=40):
 
         Optimizer.__init__(self, x_train, y_train, x_test, y_test, n_folds)
 
@@ -221,7 +221,7 @@ def determine_parameters_all(x_train, y_train, x_test, y_test):
     # threads.append(threading.Thread(target=determine_parameters, args=(svm_opt,)))
     threads.append(threading.Thread(target=determine_parameters, args=(ann_opt,)))
     threads.append(threading.Thread(target=determine_parameters, args=(tree_opt,)))
-    threads.append(threading.Thread(target=determine_parameters, args=(forest_opt,)))
+#threads.append(threading.Thread(target=determine_parameters, args=(forest_opt,)))
 
     for thread in threads:
         thread.start()

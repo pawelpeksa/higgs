@@ -55,7 +55,7 @@ def main():
         higgs_result[Config.DNN_KEY] = []
         
         higgs_thread = threading.Thread(target=run_higgs, args=(higgs_data, higgs_result[Config.DNN_KEY]))
-        higgs_thread.start()
+#        higgs_thread.start()
 
         methods_config =  determine_parameters_all(higgs_data.train.x, higgs_data.train.y, 
 			                           higgs_data.valid.x, higgs_data.valid.y)
@@ -65,18 +65,18 @@ def main():
 
         results = run_all_clfs(methods_config, higgs_data)
 
-        higgs_thread.join()
+#       higgs_thread.join()
 
-        results[Config.DNN_KEY] = higgs_result[Config.DNN_KEY]
+#       results[Config.DNN_KEY] = higgs_result[Config.DNN_KEY]
 
         save_results(results, higgs_frac)
         
         plt.figure()
         plot_from_dict(results[Config.TREE_KEY], 'tree')
-        plot_from_dict(results[Config.FOREST_KEY], 'forest')
+#        plot_from_dict(results[Config.FOREST_KEY], 'forest')
         # plot_from_dict(results[Config.SVM_KEY], 'svm')
         plot_from_dict(results[Config.ANN_KEY], 'ann')
-        plot_from_dict(results[Config.DNN_KEY], 'dnn')
+#plot_from_dict(results[Config.DNN_KEY], 'dnn')
 
         file_name = Config.RESULTS_DIR + 'roc_' + str(higgs_frac) + '.pdf'
         logger().info('Saving plot at:' + file_name)
@@ -110,13 +110,13 @@ def run_all_clfs(methods_config, higgs_data):
     logger().info('Run all cfs')
 
     tree = DecisionTreeClassifier(max_depth=methods_config.decision_tree.max_depth)
-    forest = RandomForestClassifier(max_depth=methods_config.random_forest.max_depth, 
-                                    n_estimators=methods_config.random_forest.n_estimators)
-    SVM = svm.SVC(kernel='linear', C=methods_config.svm.C, probability=True)
+#   forest = RandomForestClassifier(max_depth=methods_config.random_forest.max_depth, 
+#                  n_estimators=methods_config.random_forest.n_estimators)
+#   SVM = svm.SVC(kernel='linear', C=methods_config.svm.C, probability=True)
     ann = MLPClassifier(solver=methods_config.ann.solver,
                             max_iter=Config.ANN_OPIMIZER_MAX_ITERATIONS,
                             alpha=methods_config.ann.alpha,
-                            hidden_layer_sizes=(MethodsConfiguration.calc_hidden_neurons(),),
+                            hidden_layer_sizes=(methods_config.ann.hidden_neurons,),
                             random_state=1,
                             learning_rate='adaptive')
 
@@ -131,7 +131,7 @@ def run_all_clfs(methods_config, higgs_data):
     results[Config.DNN_KEY] = []
 
     threads.append(threading.Thread(target=run_clf, args=(tree, higgs_data, results[Config.TREE_KEY])))
-    threads.append(threading.Thread(target=run_clf, args=(forest, higgs_data, results[Config.FOREST_KEY])))
+    #threads.append(threading.Thread(target=run_clf, args=(forest, higgs_data, results[Config.FOREST_KEY])))
     # threads.append(threading.Thread(target=run_clf, args=(SVM, higgs_data, results[Config.SVM_KEY])))
     threads.append(threading.Thread(target=run_clf, args=(ann, higgs_data, results[Config.ANN_KEY])))
 
