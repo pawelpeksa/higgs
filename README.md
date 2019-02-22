@@ -1,4 +1,5 @@
-# higgs
+# Experiment with higs data
+## Idea: create machine learning models with different algorithms (ANN with deep learning, ANN, decisiton trees, random forest used) and compare result depending on data amount used.
 
 Application of tensorflow on higgs data. Based on:
 
